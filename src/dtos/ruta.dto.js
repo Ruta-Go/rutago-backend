@@ -42,8 +42,13 @@ exports.RespuestaRutasDto = (model) => {
 
 /** Orden de parada de un barrio dentro de su ruta. */
 function ordenDeBarrio(barrio) {
-  const porAsociacion =
-    (Array.isArray(barrio.rutaBarrios) && barrio.rutaBarrios[0]?.orden) ||
-    barrio.rutaBarrio?.orden;
-  return porAsociacion ?? barrio.orden ?? 0;
+  // Sequelize expone la tabla intermedia como `RutaBarrio` (nombre del
+  // modelo); solo si la consulta define otra alias cambia de nombre.
+  const aTraves =
+    barrio.RutaBarrio ||
+    barrio.rutaBarrio ||
+    (Array.isArray(barrio.rutaBarrios) ? barrio.rutaBarrios[0] : null);
+
+  if (aTraves && aTraves.orden) return aTraves.orden;
+  return barrio.orden || 0;
 }
