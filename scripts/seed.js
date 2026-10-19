@@ -27,6 +27,7 @@ const {
   Vehiculo,
   Viaje,
   ViajePasajero,
+  Barrio,
   sequelize,
 } = db;
 
@@ -59,45 +60,60 @@ const USUARIOS = [
 ];
 
 const ENTIDADES = [
-  ["entidad@rutago.com", "Transportes del Valle S.A.S.", "900.456.789-1", "602-1234567", "Carrera 3 # 10-20, Cali"],
-  ["coopersur@rutago.com", "Cooperativa de Transporte Sur S.A.S.", "900.987.654-2", "602-7654321", "Avenida 6 Oeste # 22-15, Cali"],
+  ["entidad@rutago.com", "Transportes del Valle S.A.S.", "900.456.789-1", "602-1234567", "Calle 5 # 12-20, Buenaventura"],
+  ["coopersur@rutago.com", "Cooperativa de Transporte Sur S.A.S.", "900.987.654-2", "602-7654321", "Avenida 6 Oeste # 22-15, Buenaventura"],
 ];
 
 const CONDUCTORES = [
-  ["conductor1@rutago.com", "Cali 12345678"],
-  ["conductor2@rutago.com", "Cali 23456789"],
-  ["conductor3@rutago.com", "Cali 34567890"],
+  ["conductor1@rutago.com", "C.C. 71.234.567"],
+  ["conductor2@rutago.com", "C.C. 72.345.678"],
+  ["conductor3@rutago.com", "C.C. 73.456.789"],
 ];
 
-// barrioId referencia "Barrios" (1 Nayita, 26 El Porvenir, 30 Miraflores, 86 Nueva Granada)
+/* Barrios del proyecto: el bus universitario deja a los estudiantes en su
+ * barrio al terminar las clases. «La Marina» y «La 69» no venían en el
+ * catálogo cargado por las migraciones, así que se crean al inicio. */
+const BARRIOS_NUEVOS = [
+  { nombre: "La Marina", comunaId: 6 },
+  { nombre: "La 69", comunaId: 12 },
+];
+
+// barrio refiere al catálogo Barrios (resuelto por nombre en main())
 const PASAJEROS = [
-  ["pasajero1@rutago.com", "3001112233", "Calle 5 # 12-30", 30, "1094887722", "1996-04-12"],
-  ["pasajero2@rutago.com", "3012223344", "Carrera 8 # 40-12", 26, "1095334455", "1991-11-03"],
-  ["pasajero3@rutago.com", "3023334455", "Avenida 4 Oeste # 18-60", 1, "1096778899", "1988-07-25"],
-  ["pasajero4@rutago.com", "3034445566", "Calle 15 # 100-20", 86, "1097001122", "1999-02-17"],
+  ["pasajero1@rutago.com", "3001112233", "Calle 5 # 12-30", "Miraflores", "1094887722", "1996-04-12"],
+  ["pasajero2@rutago.com", "3012223344", "Carrera 8 # 40-12", "Juan 23", "1095334455", "1991-11-03"],
+  ["pasajero3@rutago.com", "3023334455", "Avenida 4 Oeste # 18-60", "El Triunfo", "1096778899", "1988-07-25"],
+  ["pasajero4@rutago.com", "3034445566", "Calle 15 # 100-20", "Gran Colombiana", "1097001122", "1999-02-17"],
 ];
 
-// origenId / destinoId referencian "Comunas"
+/* El origen de las cuatro rutas es la universidad (Comuna 7), que es
+ * donde el bus recoge a los estudiantes antes de repartirlos por la
+ * ciudad. Cada ruta se llama por el barrio principal al que llega.
+ *
+ * [nombre, comuna origen, comuna destino, descripción, km, minutos, pasaje]
+ */
 const RUTAS = [
-  ["Ruta 1 - Centro a Ciudadelas", 1, 6, "Centro histórico - Ciudadela Colpuertos", 9.4, 32],
-  ["Ruta 2 - Ciudadelas a Granada", 6, 12, "Ciudadela Colpuertos - Granada", 14.2, 48],
-  ["Ruta 3 - Vientos Libres a Rockefeller", 2, 7, "Vientos Libres Norte - Rockefeller", 7.8, 27],
-  ["Ruta 4 - El Dorado a Nueva Granada", 11, 12, "El Dorado - Nueva Granada", 11.6, 40],
+  ["Ruta 1 · La Marina", 7, 6, "Universidad - Barrio La Marina", 8.4, 26, 2800],
+  ["Ruta 2 · El Triunfo", 7, 12, "Universidad - Barrio El Triunfo", 11.2, 34, 3200],
+  ["Ruta 3 · Bolívar", 7, 10, "Universidad - Barrio Bolívar", 6.9, 21, 2500],
+  ["Ruta 4 · Gran Colombiana", 7, 11, "Universidad - Barrio Gran Colombiana", 10.1, 30, 3000],
 ];
 
+// barrios de cada ruta, en orden de parada
 const RUTA_BARRIOS = {
-  "Ruta 1 - Centro a Ciudadelas": [1, 2, 26, 27, 30],
-  "Ruta 2 - Ciudadelas a Granada": [28, 29, 30, 82, 86],
-  "Ruta 3 - Vientos Libres a Rockefeller": [4, 7, 36, 39],
-  "Ruta 4 - El Dorado a Nueva Granada": [70, 75, 86, 101],
+  "Ruta 1 · La Marina": ["La Marina", "Miraflores", "Juan 23", "El Porvenir"],
+  "Ruta 2 · El Triunfo": ["El Triunfo", "La 69", "Gran Colombiana", "Nueva Granada"],
+  "Ruta 3 · Bolívar": ["Bolívar", "Las Américas", "Bello Horizonte", "Camilo Torres"],
+  "Ruta 4 · Gran Colombiana": ["Gran Colombiana", "El Dorado", "Panamericano", "Nueva Colombia"],
 };
 
+// Salidas desde la universidad, después del último bloque de clases.
 const HORARIOS = [
-  ["Ruta 1 - Centro a Ciudadelas", "06:00:00", 30, "1,2,3,4,5"],
-  ["Ruta 1 - Centro a Ciudadelas", "14:00:00", 40, "1,2,3,4,5"],
-  ["Ruta 2 - Ciudadelas a Granada", "05:30:00", 45, "1,2,3,4,5,6"],
-  ["Ruta 3 - Vientos Libres a Rockefeller", "07:00:00", 25, "1,3,5"],
-  ["Ruta 4 - El Dorado a Nueva Granada", "06:30:00", 60, "1,2,3,4,5"],
+  ["Ruta 1 · La Marina", "13:30:00", 30, "1,2,3,4,5"],
+  ["Ruta 1 · La Marina", "17:00:00", 30, "1,2,3,4,5"],
+  ["Ruta 2 · El Triunfo", "14:00:00", 45, "1,2,3,4,5"],
+  ["Ruta 3 · Bolívar", "14:30:00", 25, "1,2,3,4,5"],
+  ["Ruta 4 · Gran Colombiana", "13:45:00", 40, "1,2,3,4,5"],
 ];
 
 // entidadIdx 0 -> primera entidad, 1 -> segunda entidad
@@ -121,6 +137,34 @@ async function main() {
   const enHoras = (h) => new Date(ahora.getTime() + h * 60 * 60 * 1000);
 
   const contrasenaHasheada = await bcrypt.hash(CONTRASENA, 10);
+
+  // ─── 0. Barrios del proyecto ───────────────────────────────────────
+  // Se trabaja por nombre, no por id: el catálogo cambia según la
+  // migración que haya cargado cada base.
+  const barriosPorNombre = {};
+  for (const b of await Barrio.findAll()) barriosPorNombre[b.nombre] = b.id;
+
+  let creados = 0;
+  for (const nuevo of BARRIOS_NUEVOS) {
+    if (barriosPorNombre[nuevo.nombre]) continue;
+    const registro = await Barrio.create(nuevo);
+    barriosPorNombre[nuevo.nombre] = registro.id;
+    creados++;
+    console.log(`+ Barrio nuevo: ${nuevo.nombre} (comuna ${nuevo.comunaId})`);
+  }
+  console.log(`✔ Barrios: ${Object.keys(barriosPorNombre).length} en el catálogo (${creados} nuevos)`);
+
+  /** Barrio a partir de su nombre; falla con un mensaje claro si no está. */
+  const idDeBarrio = (nombre) => {
+    const id = barriosPorNombre[nombre];
+    if (!id) {
+      throw new Error(
+        `El barrio «${nombre}» no está en el catálogo.\n` +
+        "Agrégalo a BARRIOS_NUEVOS en scripts/seed.js y vuelve a correrlo.",
+      );
+    }
+    return id;
+  };
 
   // ─── 1. Usuarios ───────────────────────────────────────────────────
   const usuarios = {};
@@ -171,7 +215,7 @@ async function main() {
 
   // ─── 4. Pasajeros ──────────────────────────────────────────────────
   const pasajeros = {};
-  for (const [correo, telefono, direccion, barrioId, numeroDocumento, fechaNacimiento] of PASAJEROS) {
+  for (const [correo, telefono, direccion, barrioNombre, numeroDocumento, fechaNacimiento] of PASAJEROS) {
     const [registro] = await asegurar(
       Pasajero,
       { usuarioId: usuarios[correo].id },
@@ -180,7 +224,7 @@ async function main() {
         telefono,
         direccion,
         tipoDocumentoId: TIPO_DOC_CC,
-        barrioId,
+        barrioId: idDeBarrio(barrioNombre),
         numeroDocumento,
         fechaNacimiento,
       },
@@ -191,11 +235,11 @@ async function main() {
 
   // ─── 5. Rutas ──────────────────────────────────────────────────────
   const rutas = {};
-  for (const [nombre, origenId, destinoId, descripcion, distanciaKm, tiempoEstimadoMinutos] of RUTAS) {
+  for (const [nombre, origenId, destinoId, descripcion, distanciaKm, tiempoEstimadoMinutos, costo] of RUTAS) {
     const [registro] = await asegurar(
       Ruta,
       { nombre },
-      { nombre, origenId, destinoId, descripcion, distanciaKm, tiempoEstimadoMinutos },
+      { nombre, origenId, destinoId, descripcion, distanciaKm, tiempoEstimadoMinutos, costo },
     );
     rutas[nombre] = registro;
   }
@@ -203,9 +247,10 @@ async function main() {
 
   // ─── 6. RutaBarrio (barrios de cada ruta, en orden) ────────────────
   let enlaces = 0;
-  for (const [nombreRuta, barrioIds] of Object.entries(RUTA_BARRIOS)) {
+  for (const [nombreRuta, nombresBarrio] of Object.entries(RUTA_BARRIOS)) {
     const ruta = rutas[nombreRuta];
-    for (const [i, barrioId] of barrioIds.entries()) {
+    for (const [i, nombreBarrio] of nombresBarrio.entries()) {
+      const barrioId = idDeBarrio(nombreBarrio);
       const [, creado] = await asegurar(
         RutaBarrio,
         { rutaId: ruta.id, barrioId },
