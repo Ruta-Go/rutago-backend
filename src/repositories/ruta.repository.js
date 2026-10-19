@@ -34,7 +34,11 @@ exports.obtenerPorId = async (id) => {
     include: [
       { model: Comuna, as: "origen" },
       { model: Comuna, as: "destino" },
-      { model: Barrio, as: "barrios" },
+      {
+        model: Barrio,
+        as: "barrios",
+        through: { attributes: ["orden"] },
+      },
       {
         model: Horario,
         as: "horarios",
