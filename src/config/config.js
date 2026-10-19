@@ -3,13 +3,28 @@ require("dotenv").config();
 
 /* El SSL es obligatorio en bases de datos alojadas (AWS RDS, Neon,
    Supabase...) pero no existe en un PostgreSQL local.
-   Por defecto el SSL queda ACTIVADO para no romper producción (Neon
-   rechaza las conexiones sin SSL). Para desarrollo local se desactiva
-   declarando DB_SSL=false en el archivo .env */
-const opcionesConexion =
-  process.env.DB_SSL === "false"
-    ? {}
-    : { dialectOptions: { ssl: { require: true, rejectUnauthorized: false } } };
+
+   Se decide SOLO segun el HOST, para que nadie tenga que configurar
+   nada ni rompa su entorno al hacer pull:
+     - HOST local (localhost / 127.0.0.1 / ::1) -> sin SSL
+     - cualquier otro HOST (la nube)             -> con SSL
+
+   DB_SSL=true / DB_SSL=false en el .env sirve como override explicito
+   para los casos especiales (por ejemplo un Postgres local con SSL). */
+const HOST_LOCAL = /^(localhost|127\.0\.0\.1|::1)$/i;
+
+const esHostLocal = HOST_LOCAL.test(String(process.env.HOST || "").trim());
+
+const usarSSL =
+  process.env.DB_SSL === "true"
+    ? true
+    : process.env.DB_SSL === "false"
+      ? false
+      : !esHostLocal;
+
+const opcionesConexion = usarSSL
+  ? { dialectOptions: { ssl: { require: true, rejectUnauthorized: false } } }
+  : {};
 
 module.exports = {
   development: {
