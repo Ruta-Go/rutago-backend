@@ -66,10 +66,23 @@ exports.guardarUsuario = async (datosUsuario) => {
   return await Usuario.create(datosUsuario);
 };
 
+const CAMPOS_ACTUALIZABLES = new Set([
+  "nombres",
+  "apellidos",
+  "correo",
+  "activo",
+]);
+
 exports.actualizarDatos = async (id, datos) => {
   const usuario = await Usuario.findByPk(id);
   if (!usuario) throw new Error("USUARIO_NO_ENCONTRADO");
-  return await usuario.update(datos);
+
+  const cambios = Object.fromEntries(
+    Object.entries(datos || {}).filter(([campo]) =>
+      CAMPOS_ACTUALIZABLES.has(campo),
+    ),
+  );
+  return await usuario.update(cambios);
 };
 
 exports.actualizarRol = async (id, rolId) => {

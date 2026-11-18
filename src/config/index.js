@@ -18,6 +18,12 @@ const envSchema = z
       .min(10, "JWT_SECRET debe tener al menos 10 caracteres"),
     JWT_EXPIRES_IN: z.string(),
     JWT_REFRESH_EXPIRES_IN: z.string(),
+    // Correo de recuperación. Sin EMAIL_API_KEY se usa modo consola en
+    // desarrollo; en producción el envío falla explícitamente hasta
+    // configurar el proveedor (no se finge que el correo fue enviado).
+    EMAIL_API_KEY: z.string().optional(),
+    EMAIL_FROM: z.string().optional(),
+    PASSWORD_RESET_URL: z.string().url().optional(),
   })
   .superRefine((datos, ctx) => {
     // En producción no se puede firmar con el valor de ejemplo del
@@ -69,5 +75,11 @@ module.exports = {
 
   cors: {
     origen: parsed.data.CORS_ORIGIN,
+  },
+  frontendUrl: parsed.data.FRONTEND_URL,
+  correo: {
+    apiKey: parsed.data.EMAIL_API_KEY,
+    from: parsed.data.EMAIL_FROM,
+    resetUrl: parsed.data.PASSWORD_RESET_URL,
   },
 };

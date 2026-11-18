@@ -38,7 +38,22 @@ const authLimiter = rateLimit({
 });
 
 app.use(express.json({ limit: "10kb" }));
-const origenesPermitidos = config.cors.origen.split(",");
+const origenesPermitidos = config.cors.origen
+  .split(",")
+  .map((origen) => origen.trim())
+  .filter(Boolean);
+
+// La terminación TLS la hace el proxy (Render/VPS). Este header sólo
+// refuerza HTTPS en el navegador; no redirigimos para no romper health checks.
+app.use((req, res, next) => {
+  if (config.entorno === "production") {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+  }
+  next();
+});
 
 app.use(
   cors({
@@ -46,7 +61,8 @@ app.use(
       if (!origin || origenesPermitidos.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("No autorizado por CORS"));
+        // Sin cabecera CORS: el navegador bloquea el origen no permitido.
+        callback(null, false);
       }
     },
     credentials: true,
@@ -111,6 +127,7 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/refresh", authLimiter);
 app.use("/api/usuarios/registro", authLimiter);
 app.use("/api/usuarios/recuperar-contrasena", authLimiter);
 app.use("/api/usuarios/cambiar-contrasena", authLimiter);

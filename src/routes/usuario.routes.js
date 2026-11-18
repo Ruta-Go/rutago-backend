@@ -34,11 +34,9 @@ const usuarioSchema = require("../schemas/usuario.schema");
  *               contrasena:
  *                 type: string
  *                 format: password
- *               rolId:
- *                 type: integer
  *     responses:
  *       201:
- *         description: Usuario registrado exitosamente
+ *         description: Usuario registrado exitosamente (rol pasajero)
  *       400:
  *         description: Datos inválidos
  */
@@ -172,6 +170,41 @@ router.put(
 
 /**
  * @swagger
+ * /api/usuarios/me/contrasena:
+ *   put:
+ *     summary: Cambiar la contraseña del usuario autenticado
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [contrasenaActual, nuevaContrasena]
+ *             properties:
+ *               contrasenaActual:
+ *                 type: string
+ *                 format: password
+ *               nuevaContrasena:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada
+ *       400:
+ *         description: Contraseña actual incorrecta o datos inválidos
+ */
+router.put(
+  "/me/contrasena",
+  authMiddleware.verificarToken,
+  validarSchema(usuarioSchema.cambiarContrasenaPerfil),
+  usuarioController.cambiarContrasenaPerfil,
+);
+
+/**
+ * @swagger
  * /api/usuarios:
  *   get:
  *     summary: Obtener todos los usuarios (paginado)
@@ -300,7 +333,7 @@ router.put(
   "/:id",
   authMiddleware.verificarToken,
   roleMiddleware.esAdministrador,
-  validarSchema(usuarioSchema.actualizarPerfil),
+  validarSchema(usuarioSchema.actualizarAdministrador),
   usuarioController.actualizarUsuario,
 );
 

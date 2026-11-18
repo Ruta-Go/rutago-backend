@@ -1,5 +1,13 @@
 const { z } = require("zod");
 
+// Una sola definición para registro y restablecimiento: evita que un flujo
+// acepte contraseñas más débiles que el otro.
+const contrasenaSegura = z
+  .string({ required_error: "La contraseña es obligatoria" })
+  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .regex(/[A-Za-z]/, "La contraseña debe contener al menos una letra")
+  .regex(/[0-9]/, "La contraseña debe contener al menos un número");
+
 const registro = z.object({
   nombres: z
     .string({ required_error: "El nombre es obligatorio" })
@@ -16,10 +24,9 @@ const registro = z.object({
     .trim()
     .email("Debe proporcionar un correo electrónico válido")
     .transform((v) => v.toLowerCase()),
-  contrasena: z
-    .string({ required_error: "La contraseña es obligatoria" })
-    .min(6, "La contraseña debe tener al menos 6 caracteres"),
-  rolId: z.coerce.number().int().positive().optional(),
+  contrasena: contrasenaSegura,
+  // El registro público SIEMPRE crea pasajeros. El rol se asigna
+  // únicamente desde el endpoint administrativo /:id/rol.
   telefono: z.string().optional(),
   direccion: z.string().optional(),
   tipoDocumentoId: z.coerce.number().int().positive().optional(),
@@ -27,6 +34,8 @@ const registro = z.object({
   fechaNacimiento: z.string().optional(),
 });
 
+// Campos que el propio usuario puede cambiar de su perfil.
+// Nunca rolId, activo, contrasena ni cualquier otro campo sensible.
 const actualizarPerfil = z.object({
   nombres: z.string().trim().min(2).max(50).optional(),
   apellidos: z.string().trim().min(2).max(50).optional(),
@@ -36,8 +45,15 @@ const actualizarPerfil = z.object({
     .email()
     .transform((v) => v.toLowerCase())
     .optional(),
-  contrasena: z.string().min(6).optional(),
-  rolId: z.coerce.number().int().positive().optional(),
+});
+
+const actualizarAdministrador = actualizarPerfil.extend({
+  activo: z.boolean().optional(),
+});
+
+const cambiarContrasenaPerfil = z.object({
+  contrasenaActual: z.string().min(1, "La contraseña actual es obligatoria"),
+  nuevaContrasena: contrasenaSegura,
 });
 
 const recuperarContrasena = z.object({
@@ -52,9 +68,7 @@ const cambiarContrasena = z.object({
   token: z
     .string({ required_error: "El token es obligatorio" })
     .min(1, "El token es obligatorio"),
-  nuevaContrasena: z
-    .string({ required_error: "La nueva contraseña es obligatoria" })
-    .min(6, "La nueva contraseña debe tener al menos 6 caracteres"),
+  nuevaContrasena: contrasenaSegura,
 });
 
 const cambiarRol = z.object({
@@ -67,6 +81,8 @@ const cambiarRol = z.object({
 module.exports = {
   registro,
   actualizarPerfil,
+  actualizarAdministrador,
+  cambiarContrasenaPerfil,
   recuperarContrasena,
   cambiarContrasena,
   cambiarRol,

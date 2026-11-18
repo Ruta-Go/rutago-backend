@@ -12,12 +12,13 @@ const manejarError = (res, error) => {
 
 exports.registrarUsuario = async (req, res) => {
   try {
-    const datos = req.body;
-    if (!datos.rolId) datos.rolId = ROLES.PASAJERO;
+    // El cliente nunca decide el rol: el registro público crea pasajeros.
+    // Los demás roles se asignan sólo desde /api/usuarios/:id/rol (admin).
+    const datos = { ...req.body, rolId: ROLES.PASAJERO };
 
     const nuevoUsuario = await usuarioService.crearUsuario(datos);
 
-    if (datos.rolId === ROLES.PASAJERO) {
+    if (nuevoUsuario.rolId === ROLES.PASAJERO) {
       const existente = await pasajeroService
         .obtenerPorUsuario(nuevoUsuario.id)
         .catch(() => null);
@@ -74,13 +75,23 @@ exports.recuperarContrasena = async (req, res) => {
         "Si el correo está registrado, recibirás un enlace de recuperación",
     });
   } catch (error) {
-    res
-      .status(400)
-      .json({
+    if (
+      ["CORREO_NO_CONFIGURADO", "PASSWORD_RESET_URL_NO_CONFIGURADA", "ERROR_ENVIO_CORREO"].includes(
+        error.message,
+      )
+    ) {
+      console.error("No se pudo entregar el correo de recuperación:", error.message);
+      return res.status(503).json({
         success: false,
-        message:
-          "Si el correo está registrado, recibirás un enlace de recuperación",
+        message: "No se pudo enviar el correo. Intente nuevamente más tarde.",
       });
+    }
+    // Respuesta uniforme para no revelar si el correo existe.
+    res.json({
+      success: true,
+      message:
+        "Si el correo está registrado, recibirás un enlace de recuperación",
+    });
   }
 };
 
@@ -165,11 +176,31 @@ exports.actualizarMiPerfil = async (req, res) => {
   }
 };
 
+exports.cambiarContrasenaPerfil = async (req, res) => {
+  try {
+    await usuarioService.cambiarContrasenaAutenticado(
+      req.usuario.id,
+      req.body.contrasenaActual,
+      req.body.nuevaContrasena,
+    );
+    res.json({ success: true, message: "Contraseña actualizada" });
+  } catch (error) {
+    if (
+      error.message === "CONTRASENA_ACTUAL_INCORRECTA" ||
+      error.message === "USUARIO_NO_ENCONTRADO"
+    ) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    manejarError(res, error);
+  }
+};
+
 exports.actualizarUsuario = async (req, res) => {
   try {
     const usuario = await usuarioService.actualizarDatos(
       req.params.id,
       req.body,
+      true,
     );
     res.json({
       success: true,
