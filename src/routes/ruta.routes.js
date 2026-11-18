@@ -106,6 +106,43 @@ router.get(
  *       404:
  *         description: Ruta no encontrada
  */
+/**
+ * @swagger
+ * /api/rutas/cercanas:
+ *   post:
+ *     summary: Rutas cercanas a una coordenada (PostGIS o cálculo local)
+ *     tags: [Rutas]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [latitud, longitud]
+ *             properties:
+ *               latitud:
+ *                 type: number
+ *               longitud:
+ *                 type: number
+ *               radioMetros:
+ *                 type: number
+ *               limite:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Rutas ordenadas por distancia real
+ *       400:
+ *         description: Coordenadas inválidas
+ */
+router.post(
+  "/cercanas",
+  authMiddleware.verificarToken,
+  validarSchema(rutaSchema.cercanas),
+  rutaController.obtenerCercanas,
+);
+
 router.get("/:id", authMiddleware.verificarToken, rutaController.obtenerPorId);
 
 /**

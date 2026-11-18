@@ -62,6 +62,10 @@ const actualizarUbicacion = z.object({
     .number({ required_error: "El estado es obligatorio" })
     .int()
     .positive("El estado debe ser un número entero positivo"),
+  velocidadActual: z.coerce
+    .number()
+    .min(0, "La velocidad no puede ser negativa")
+    .optional(),
 });
 
 module.exports = { crear, actualizar, actualizarUbicacion };

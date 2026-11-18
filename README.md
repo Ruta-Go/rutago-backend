@@ -340,6 +340,7 @@ Endpoints destacados adicionales:
 | Método | Ruta                               | Roles | Descripción              |
 | ------ | ---------------------------------- | ----- | ------------------------ |
 | GET    | /api/rutas/destino/:destino        | Auth  | Buscar rutas por destino |
+| POST   | /api/rutas/cercanas                | Auth  | Rutas por distancia real a una coordenada |
 | GET    | /api/horarios/ruta/:rutaId         | Auth  | Horarios de una ruta     |
 | GET    | /api/horarios/vehiculo/:vehiculoId | Auth  | Horarios de un vehículo  |
 
@@ -354,7 +355,31 @@ Endpoints destacados adicionales:
 | DELETE | /api/viajes/:id        | Admin      | Eliminar viaje                    |
 | PATCH  | /api/viajes/:id/estado | Admin/Cond | Cambiar estado del viaje          |
 | POST   | /api/viajes/:id/unirse | Pasajero   | Unirse a un viaje como pasajero   |
-| GET    | /api/viajes/mis-viajes | Auth       | Obtener viajes del usuario actual |
+| GET    | /api/viajes/me/mis-viajes | Auth     | Obtener viajes del usuario actual |
+
+### Tiempo real y geoespacial
+
+El seguimiento no duplica el REST de GPS ya existente (`GET/PUT /api/vehiculos/:id/ubicacion`).
+Sólo agrega difusión en tiempo real y búsqueda por proximidad sobre `Rutas.rutaGeometria`
+(columna `TEXT` con GeoJSON que ya existe, sin migraciones nuevas):
+
+- **WebSocket autenticado:** `ws(s)://<host>/ws?token=<accessToken>`. Se rechaza refresh token,
+  token inválido y usuario inactivo. El rol se vuelve a leer de la BD en el handshake.
+- **Salas autorizadas:** `usuario:<id>` (sólo el propio), `rol:<id>` (sólo el propio),
+  `vehiculo:<id>` y `viaje:<id>` (según propiedad real en BD: conductor asignado,
+  pasajero inscrito, entidad propietaria o administrador).
+- **Mensajes del cliente:** `{ "tipo": "suscribirse", "sala": "viaje:12" }` y
+  `{ "tipo": "desuscribirse", "sala": "viaje:12" }`.
+- **Eventos del servidor:** `conectado`, `suscrito`, `desuscrito`, `error`,
+  `ubicacion` y —desde la siguiente tarea— `notificacion`.
+- **GPS real:** cada `PUT /api/vehiculos/:id/ubicacion` persiste latitud, longitud,
+  velocidad y fecha, y publica el evento `ubicacion` a la sala del vehículo y del viaje activo.
+  Si no hay viaje activo, no se inventa receptor: el evento queda sólo en la sala del vehículo.
+- **`POST /api/rutas/cercanas`:** body `{ latitud, longitud, radioMetros?, limite? }`.
+  Usa PostGIS (`ST_DWithin` + `ST_Distance`) cuando la extensión está instalada; si no, calcula
+  distancia haversine sobre el GeoJSON guardado. La respuesta indica `motor: "postgis"` o
+  `"javascript"` para no confundir al cliente. No se ejecuta `CREATE EXTENSION` automáticamente:
+  si se quiere PostGIS, el administrador de BD debe habilitarlo fuera de la aplicación.
 
 ---
 
@@ -431,17 +456,20 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 - Logout con reemplazo de historial (evita volver atrás con el navegador).
 - Dashboard modular con componentes separados por rol.
 - API REST documentada con todos los endpoints.
+- WebSocket autenticado en `/ws` con salas autorizadas por propiedad real en BD.
+- Difusión en tiempo real de la ubicación reportada por conductores (`evento ubicacion`).
+- Búsqueda de rutas cercanas con PostGIS cuando está disponible y fallback real en JavaScript.
 
 ### 🚧 En desarrollo
 
-- PostGIS y geometrías espaciales (polígonos de comunas/barrios, rutas LINESTRING, vehículos POINT).
-- Endpoints de geolocalización en tiempo real (WebSockets).
+- Notificaciones automáticas persistentes (siguiente tarea del backend).
+- Geometrías espaciales de comunas/barrios y puntos de vehículos en PostGIS (requiere decisión de infraestructura; no se ejecuta contra producción).
 
 ### 📌 Pendiente
 
-- Seguimiento GPS en tiempo real.
-- Estado de buses en tiempo real.
-- Notificaciones automáticas.
+- Estado de buses en tiempo real en el mapa web (requiere consumir el nuevo canal WebSocket).
+- Notificaciones automáticas (no confundir con el canal WebSocket ya disponible).
+- Habilitar PostGIS en la BD de destino si se quiere el motor `postgis`; sin él funciona el motor `javascript`.
 
 ---
 
@@ -466,7 +494,8 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 
 ## 🧪 Evidencia de cierre (Sprint 4)
 
-- [x] `npm test` → 18 pruebas, 18 correctas.
+- [x] `npm test` → 27 pruebas, 27 correctas (incluye WebSocket, GPS y geobúsqueda).
+- [x] Commit local de tiempo real y geoespacial sin push (restricción vigente).
 - [x] `git push origin main` desde `rutago-backend` (commits `9c6f292`, `e9dd736`, docs finales).
 - [x] `GET https://rutago-backend-a303.onrender.com/api/ping` → 200.
 - [ ] Verificación manual en vivo de los 4 checks de Fase 2: bloqueada porque el dominio del frontend está vencido.

@@ -1,4 +1,5 @@
 const rutaService = require("../services/ruta.service");
+const geoService = require("../services/geo.service");
 const rutaDto = require("../dtos/ruta.dto");
 
 const manejarError = (res, error) => {
@@ -28,6 +29,28 @@ exports.obtenerTodas = async (req, res) => {
     });
   } catch (error) {
     manejarError(res, error);
+  }
+};
+
+exports.obtenerCercanas = async (req, res) => {
+  try {
+    const resultado = await geoService.obtenerRutasCercanas(req.body);
+    res.json({
+      success: true,
+      motor: resultado.motor,
+      data: resultado.rutas,
+    });
+  } catch (error) {
+    const mensajes = {
+      LATITUD_INVALIDA: "La latitud no es válida",
+      LONGITUD_INVALIDA: "La longitud no es válida",
+      RADIO_INVALIDO: "El radio de búsqueda no es válido",
+      LIMITE_INVALIDO: "El límite de resultados no es válido",
+    };
+    res.status(400).json({
+      success: false,
+      message: mensajes[error.message] || error.message,
+    });
   }
 };
 

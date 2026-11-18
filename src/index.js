@@ -1,3 +1,4 @@
+const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -5,6 +6,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 const config = require("./config");
 const errorHandler = require("./middlewares/error.middleware");
+const tiempoReal = require("./services/tiempo-real.service");
 
 const { sequelize } = require("./models");
 const authRoutes = require("./routes/auth.routes");
@@ -162,8 +164,11 @@ const iniciarServidor = async () => {
     await sequelize.sync();
     console.log("Base de datos sincronizada (modo desarrollo).");
   }
-  app.listen(PORT, () => {
+  const servidor = http.createServer(app);
+  tiempoReal.adjuntar(servidor);
+  servidor.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
+    console.log(`WebSocket autenticado disponible en /ws`);
   });
 };
 

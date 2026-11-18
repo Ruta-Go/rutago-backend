@@ -1,7 +1,10 @@
 const vehiculoService = require("../services/vehiculo.service");
 const entidadRepository = require("../repositories/entidad.repository");
 const vehiculoRepository = require("../repositories/vehiculo.repository");
+const tiempoReal = require("../services/tiempo-real.service");
+const { Viaje } = require("../models");
 const { ROLES } = require("../config/roles");
+const { ESTADOS_VIAJE } = require("../config/estados");
 const vehiculoDto = require("../dtos/vehiculo.dto");
 
 const manejarError = (res, error) => {
@@ -67,6 +70,36 @@ exports.actualizarUbicacion = async (req, res) => {
       req.params.id,
       req.body,
     );
+    // El viaje activo se busca sólo para saber a qué sala de pasajeros
+    // notificar. La propiedad y el permiso ya los validó el middleware.
+    let viajeActivo = null;
+    try {
+      viajeActivo = await Viaje.findOne({
+        where: {
+          vehiculoId: req.params.id,
+          estadoId: [ESTADOS_VIAJE.ACEPTADO, ESTADOS_VIAJE.EN_CURSO],
+        },
+        attributes: ["id"],
+        order: [["createdAt", "DESC"]],
+      });
+      tiempoReal.publicarUbicacion(
+        req.params.id,
+        {
+          latitud: Number(req.body.latitud),
+          longitud: Number(req.body.longitud),
+          estadoId: Number(req.body.estadoId),
+          velocidadActual:
+            req.body.velocidadActual === undefined
+              ? null
+              : Number(req.body.velocidadActual),
+          ultimaActualizacion: vehiculo.ultimaActualizacion,
+        },
+        viajeActivo?.id || null,
+      );
+    } catch (error) {
+      console.warn("[vehiculos] no se pudo difundir la ubicación:", error.message);
+    }
+
     res.json({
       success: true,
       message: "Ubicación actualizada",

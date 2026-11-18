@@ -31,6 +31,23 @@ const crear = z.object({
   rutaGeometria: z.string().optional(),
 });
 
+const cercanas = z.object({
+  latitud: z.coerce
+    .number({ required_error: "La latitud es obligatoria" })
+    .min(-90, "La latitud debe estar entre -90 y 90")
+    .max(90, "La latitud debe estar entre -90 y 90"),
+  longitud: z.coerce
+    .number({ required_error: "La longitud es obligatoria" })
+    .min(-180, "La longitud debe estar entre -180 y 180")
+    .max(180, "La longitud debe estar entre -180 y 180"),
+  radioMetros: z.coerce
+    .number()
+    .positive("El radio debe ser mayor a 0")
+    .max(50000, "El radio máximo es 50000 metros")
+    .optional(),
+  limite: z.coerce.number().int().min(1).max(100).optional(),
+});
+
 const actualizar = z.object({
   nombre: z.string().trim().min(2).max(200).optional(),
   origenId: z.coerce.number().int().positive().optional(),
@@ -41,4 +58,4 @@ const actualizar = z.object({
   rutaGeometria: z.string().optional(),
 });
 
-module.exports = { crear, actualizar };
+module.exports = { crear, actualizar, cercanas };

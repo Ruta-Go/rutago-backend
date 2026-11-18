@@ -85,13 +85,15 @@ exports.obtenerUbicacion = async (id) => {
 };
 
 exports.actualizarUbicacion = async (id, datos) => {
-  const { latitud, longitud, estadoId } = datos;
-  return await vehiculoRepository.actualizarVehiculo(id, {
+  const { latitud, longitud, estadoId, velocidadActual } = datos;
+  const cambios = {
     latitud,
     longitud,
     estadoId,
     ultimaActualizacion: new Date(),
-  });
+  };
+  if (velocidadActual !== undefined) cambios.velocidadActual = velocidadActual;
+  return await vehiculoRepository.actualizarVehiculo(id, cambios);
 };
 
 exports.crearVehiculo = async (datos) => {

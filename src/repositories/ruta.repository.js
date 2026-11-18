@@ -72,6 +72,25 @@ exports.buscarPorDestino = async (destino) => {
   });
 };
 
+/** Rutas con geometría GeoJSON guardada; se usa para búsqueda por proximidad. */
+exports.obtenerConGeometria = async () => {
+  return await Ruta.findAll({
+    attributes: [
+      "id",
+      "nombre",
+      "rutaGeometria",
+      "distanciaKm",
+      "tiempoEstimadoMinutos",
+      "costo",
+    ],
+    where: { rutaGeometria: { [Op.not]: null } },
+    include: [
+      { model: Comuna, as: "origen", attributes: ["id", "nombre"] },
+      { model: Comuna, as: "destino", attributes: ["id", "nombre"] },
+    ],
+  });
+};
+
 exports.crearRuta = async (datos) => {
   return await Ruta.create(datos);
 };
