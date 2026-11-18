@@ -137,10 +137,12 @@ El frontend se sirve desde el mismo dominio VPS. Las peticiones a `/api` son red
 
 | Servicio            | URL                                                  | Verificación                 |
 | ------------------- | ---------------------------------------------------- | ---------------------------- |
-| Frontend (VPS)      | https://rutago.seminario1.eleueleo.com/              | Despliegue por GitHub Actions |
+| Frontend (VPS)      | https://rutago.seminario1.eleueleo.com/              | Dominio vencido (Hostinger) — no disponible |
 | Backend (Render)    | https://rutago-backend-a303.onrender.com/api         | `GET /api/ping` → 200          |
-| Backend (VPS, proxy)| https://rutago.seminario1.eleueleo.com/api           | TLS no validado desde este entorno |
+| Backend (VPS, proxy)| https://rutago.seminario1.eleueleo.com/api           | Dominio vencido (Hostinger) — no disponible |
 | Swagger             | http://localhost:8082/api/docs (solo local)          | —                            |
+
+Verificación local: npm run check:env valida las variables obligatorias sin imprimir valores.
 
 La URL definitiva de producción debe acordarse entre Render y el VPS/dominio. El móvil usa `EXPO_PUBLIC_API_URL` para apuntar al backend elegido.
 
@@ -467,7 +469,7 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 - [x] `npm test` → 18 pruebas, 18 correctas.
 - [x] `git push origin main` desde `rutago-backend` (commits `9c6f292`, `e9dd736`, docs finales).
 - [x] `GET https://rutago-backend-a303.onrender.com/api/ping` → 200.
-- [ ] Verificación manual en vivo de los 4 checks de Fase 2 (requiere credenciales y entorno desplegado).
+- [ ] Verificación manual en vivo de los 4 checks de Fase 2: bloqueada porque el dominio del frontend está vencido.
 
 > Seguridad operativa: el `.env` real revisado contiene credenciales que deben considerarse
 > expuestas. Rotarlas de forma coordinada sin publicar valores.

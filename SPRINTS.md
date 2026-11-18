@@ -16,6 +16,7 @@ Cierre integral de RutaGo **sin reconstruir** el proyecto: se auditaron los tres
 | Sprint 3 · Móvil | `rutago-mobile` | `EXPO_PUBLIC_API_URL`, envelope `{ success, data }`, sesión reactiva, roles reales, logout, deep link y contrato de `horarios` | `75c20e9` | Sí (`5fc2e97..75c20e9`) |
 | Sprint 4 · Documentación y verificación | Los tres | READMEs, `SPRINTS.md`, `.env.example` y evidencia de pruebas | Docs finales | Sí |
 | Sprint 5 · Auditoría final | Los tres | Sólo `.env.example` versionado, deploy sin generar `JWT_SECRET`, `npm ci` en CI web, CI móvil de tipos/lint | Auditoría final | Sí |
+| Sprint 6 · Continuación | Los tres | Verificación en vivo: backend 200, dominio VPS vencido; chequeo de entorno sin secretos y configuración EAS preparada | Verificación final | Sí |
 
 ## Verificación ejecutada
 
@@ -28,6 +29,8 @@ Cierre integral de RutaGo **sin reconstruir** el proyecto: se auditaron los tres
 | `rutago-mobile` | `npx expo lint` | Sin errores |
 | `rutago-mobile` | `npx expo export --platform web --output-dir <ruta-temporal>` | 7 rutas estáticas exportadas |
 | Backend en vivo | `GET https://rutago-backend-a303.onrender.com/api/ping` | 200 |
+| Frontend en vivo | `GET https://rutago.seminario1.eleueleo.com/` | Dominio vencido (Hostinger): los 4 checks de Fase 2 están bloqueados |
+| Backend | `npm run check:env` | Valida variables sin imprimir valores |
 | Los tres | `git ls-files` filtrado por `.env` | Sólo `.env.example` está versionado |
 | Los tres | `git grep` de patrones de credenciales | Sin coincidencias reales |
 
@@ -43,6 +46,7 @@ No se generaron artefactos (`dist`, `web-build`) dentro de los repositorios.
 6. **Sin secretos:** `.env` nunca se publicó ni se incluyó en commits. Las variables públicas son sólo `VITE_API_URL` y `EXPO_PUBLIC_API_URL`.
 7. **CI/CD:** deploy web con `npm ci`; el script de producción ya **no genera** `JWT_SECRET` automáticamente (falla con mensaje si falta). El móvil tiene CI de `tsc`/lint; EAS build/submit sigue pendiente de credenciales.
 8. **Diferidos:** GPS/WebSocket/PostGIS, notificaciones push, CI/CD con EAS y pantallas móviles de gestión avanzada (se indica que están en la web, sin simular éxito).
+9. **Estado del dominio:** `rutago.seminario1.eleueleo.com` responde con la página de dominio vencido de Hostinger; por eso no se pueden ejecutar los 4 checks de Fase 2 en vivo. El backend de Render sigue en 200. Renovar el dominio o publicar el frontend en otra URL antes de la demo.
 
 ## Restricciones respetadas
 
@@ -54,10 +58,11 @@ No se generaron artefactos (`dist`, `web-build`) dentro de los repositorios.
 ## Pendiente para el equipo / docente
 
 1. **Rotar credenciales** del `.env` real revisado: deben considerarse expuestas. No se muestran valores en esta documentación.
-2. **Definir URL backend definitiva** (Render vs VPS/dominio) y validar TLS del dominio `rutago.seminario1.eleueleo.com` desde el entorno de demo.
+2. **Renovar el dominio** `rutago.seminario1.eleueleo.com` o definir otra URL del frontend; hoy responde "domain expired" y bloquea los checks en vivo.
 3. **Configurar proveedor de correo** (`EMAIL_API_KEY`, `EMAIL_FROM`, `PASSWORD_RESET_URL`) para el envío real; hoy el flujo está integrado pero no probado con correo.
-4. **Ejecutar manualmente** los 4 checks de Fase 2 en el entorno desplegado.
+4. **Ejecutar los 4 checks de Fase 2** una vez el frontend esté accesible (requiere credenciales de prueba).
 5. **EAS build/submit** cuando se disponga de cuenta Expo y credenciales.
+6. **Ejecutar** `npx eas-cli init` **y configurar la cuenta Expo** antes de usar `eas.json`.
 
 ## Comandos de push
 
