@@ -60,12 +60,19 @@ exports.marcarLeida = async (id, usuarioId) => {
 
 const destinatariosDelViaje = (viaje) => {
   const ids = new Set();
-  const delConductor = viaje?.conductor?.usuario?.id;
+  const delConductor =
+    viaje?.conductor?.usuarioId ??
+    viaje?.conductor?.usuario?.id ??
+    viaje?.conductor?.usuario?.usuarioId;
   if (delConductor) ids.add(Number(delConductor));
 
   for (const inscripcion of viaje?.pasajeros || []) {
     const delPasajero =
-      inscripcion?.pasajero?.usuario?.id ?? inscripcion?.usuarioId;
+      inscripcion?.pasajero?.usuarioId ??
+      inscripcion?.pasajero?.usuario?.id ??
+      inscripcion?.pasajero?.usuario?.usuarioId ??
+      inscripcion?.usuarioId ??
+      inscripcion?.usuario?.id;
     if (delPasajero) ids.add(Number(delPasajero));
   }
   return [...ids];
@@ -102,7 +109,10 @@ exports.notificarCambioEstadoViaje = async (
 
 /** Avisa al conductor cuando un pasajero se une a su viaje. */
 exports.notificarNuevoPasajero = async (viaje, actorUsuarioId) => {
-  const conductorId = viaje?.conductor?.usuario?.id;
+  const conductorId =
+    viaje?.conductor?.usuarioId ??
+    viaje?.conductor?.usuario?.id ??
+    viaje?.conductor?.usuario?.usuarioId;
   if (!conductorId || Number(conductorId) === Number(actorUsuarioId)) return [];
 
   return [

@@ -221,7 +221,12 @@ exports.actualizarViaje = async (id, datos) => {
   return await viajeRepository.actualizarViaje(id, datos);
 };
 
-exports.actualizarEstado = async (id, nuevoEstadoId, conductorId = null) => {
+exports.actualizarEstado = async (
+  id,
+  nuevoEstadoId,
+  conductorId = null,
+  vehiculoId = null,
+) => {
   const viaje = await viajeRepository.obtenerPorIdSimple(id);
   if (!viaje) throw new Error("VIAJE_NO_ENCONTRADO");
 
@@ -248,11 +253,25 @@ exports.actualizarEstado = async (id, nuevoEstadoId, conductorId = null) => {
       );
       if (existente) throw new Error("CONDUCTOR_OCUPADO_EN_HORARIO");
     }
-    await actualizarEstadoVehiculo(viaje, nuevoEstadoId);
-    return await viajeRepository.actualizarViaje(id, {
+    const datosActualizar = {
       estadoId: nuevoEstadoId,
       conductorId: conductor.id,
-    });
+    };
+
+    if (vehiculoId) {
+      const vehiculo = await vehiculoRepository.obtenerPorId(vehiculoId);
+      datosActualizar.vehiculoId = vehiculo.id;
+      const estadoVehiculo = MAPA_VEHICULO[nuevoEstadoId];
+      if (estadoVehiculo) {
+        await vehiculoRepository.actualizarVehiculo(vehiculo.id, {
+          estadoId: estadoVehiculo,
+        });
+      }
+    } else {
+      await actualizarEstadoVehiculo(viaje, nuevoEstadoId);
+    }
+
+    return await viajeRepository.actualizarViaje(id, datosActualizar);
   }
 
   const datosActualizar = { estadoId: nuevoEstadoId };

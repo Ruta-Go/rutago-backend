@@ -12,7 +12,12 @@ const usuarioParaRespuesta = (u) =>
     : undefined;
 
 const usuarioDelPerfil = (p) =>
-  p?.usuario ? usuarioParaRespuesta(p.usuario) : undefined;
+  p?.usuario
+    ? {
+        ...usuarioParaRespuesta(p.usuario),
+        usuarioId: p.usuarioId ?? p.usuario?.id ?? p.usuario?.usuarioId,
+      }
+    : undefined;
 
 exports.RespuestaViajesDto = (model) => {
   if (!model) return null;

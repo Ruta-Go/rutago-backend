@@ -300,6 +300,7 @@ router.patch(
   "/:id/aceptar",
   authMiddleware.verificarToken,
   roleMiddleware.esConductor,
+  validarSchema(viajeSchema.aceptar),
   viajeController.aceptarViaje,
 );
 

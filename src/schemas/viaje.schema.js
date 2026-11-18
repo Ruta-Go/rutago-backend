@@ -15,4 +15,12 @@ const crear = z.object({
     .optional(),
 });
 
-module.exports = { crear };
+const aceptar = z.object({
+  vehiculoId: z.coerce
+    .number()
+    .int()
+    .positive("El vehículo debe ser un número entero positivo")
+    .optional(),
+});
+
+module.exports = { crear, aceptar };

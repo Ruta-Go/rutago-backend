@@ -172,6 +172,7 @@ exports.aceptarViaje = async (req, res) => {
       req.params.id,
       2,
       req.usuario.id,
+      req.body?.vehiculoId,
     );
     await avisar(
       () =>
