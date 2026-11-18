@@ -1,5 +1,15 @@
 const viajeService = require("../services/viaje.service");
+const notificacionService = require("../services/notificacion.service");
 const viajeDto = require("../dtos/viaje.dto");
+
+/** La notificación es secundaria al cambio principal: nunca lo deshace. */
+const avisar = async (fn, etiqueta) => {
+  try {
+    await fn();
+  } catch (error) {
+    console.warn(`[notificaciones] ${etiqueta}:`, error.message);
+  }
+};
 
 const manejarError = (res, error) => {
   console.error("[viaje]", error);
@@ -66,6 +76,10 @@ exports.obtenerMisViajes = async (req, res) => {
 exports.crearViaje = async (req, res) => {
   try {
     const viaje = await viajeService.crearViaje({ ...req.body, pasajeroId: req.usuario.id });
+    await avisar(
+      () => notificacionService.notificarNuevoPasajero(viaje, req.usuario.id),
+      "viaje creado",
+    );
     res
       .status(201)
       .json({
@@ -106,6 +120,17 @@ exports.actualizarViaje = async (req, res) => {
   try {
     const datos = req.body;
     const viaje = await viajeService.actualizarViaje(req.params.id, datos);
+    if (Object.prototype.hasOwnProperty.call(datos, "conductorId")) {
+      await avisar(
+        () =>
+          notificacionService.notificarCambioEstadoViaje(
+            viaje,
+            viaje.estadoId,
+            req.usuario.id,
+          ),
+        "viaje actualizado",
+      );
+    }
     res.json({
       success: true,
       message: "Viaje actualizado",
@@ -148,6 +173,15 @@ exports.aceptarViaje = async (req, res) => {
       2,
       req.usuario.id,
     );
+    await avisar(
+      () =>
+        notificacionService.notificarCambioEstadoViaje(
+          viaje,
+          2,
+          req.usuario.id,
+        ),
+      "viaje aceptado",
+    );
     res.json({
       success: true,
       message: "Viaje aceptado",
@@ -169,6 +203,15 @@ exports.aceptarViaje = async (req, res) => {
 exports.iniciarViaje = async (req, res) => {
   try {
     const viaje = await viajeService.actualizarEstado(req.params.id, 3);
+    await avisar(
+      () =>
+        notificacionService.notificarCambioEstadoViaje(
+          viaje,
+          3,
+          req.usuario.id,
+        ),
+      "viaje iniciado",
+    );
     res.json({
       success: true,
       message: "Viaje iniciado",
@@ -182,6 +225,15 @@ exports.iniciarViaje = async (req, res) => {
 exports.finalizarViaje = async (req, res) => {
   try {
     const viaje = await viajeService.actualizarEstado(req.params.id, 4);
+    await avisar(
+      () =>
+        notificacionService.notificarCambioEstadoViaje(
+          viaje,
+          4,
+          req.usuario.id,
+        ),
+      "viaje finalizado",
+    );
     res.json({
       success: true,
       message: "Viaje finalizado",
@@ -195,6 +247,15 @@ exports.finalizarViaje = async (req, res) => {
 exports.cancelarViaje = async (req, res) => {
   try {
     const viaje = await viajeService.actualizarEstado(req.params.id, 5);
+    await avisar(
+      () =>
+        notificacionService.notificarCambioEstadoViaje(
+          viaje,
+          5,
+          req.usuario.id,
+        ),
+      "viaje cancelado",
+    );
     res.json({
       success: true,
       message: "Viaje cancelado",
@@ -221,6 +282,10 @@ exports.unirseAViaje = async (req, res) => {
     const viaje = await viajeService.unirseAViaje(
       req.params.id,
       req.usuario.id,
+    );
+    await avisar(
+      () => notificacionService.notificarNuevoPasajero(viaje, req.usuario.id),
+      "pasajero unido",
     );
     res.json({
       success: true,

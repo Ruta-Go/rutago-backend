@@ -21,6 +21,7 @@ const viajeRoutes = require("./routes/viaje.routes");
 const rutaRoutes = require("./routes/ruta.routes");
 const horarioRoutes = require("./routes/horario.routes");
 const pasajeroRoutes = require("./routes/pasajero.routes");
+const notificacionRoutes = require("./routes/notificacion.routes");
 const tipoDocumentoRoutes = require("./routes/tipodocumento.routes");
 const estadoVehiculoRoutes = require("./routes/estadovehiculo.routes");
 const estadoConductorRoutes = require("./routes/estadoconductor.routes");
@@ -101,6 +102,7 @@ const swaggerOptions = {
       { name: "Estados Conductor", description: "Estados de conductores" },
       { name: "Estados Viaje", description: "Estados de viajes" },
       { name: "Tipos Documento", description: "Tipos de documento" },
+      { name: "Notificaciones", description: "Notificaciones internas por usuario" },
     ],
     servers: [
       {
@@ -146,6 +148,7 @@ app.use("/api/rutas", rutaRoutes);
 app.use("/api/horarios", horarioRoutes);
 app.use("/api/pasajeros", pasajeroRoutes);
 app.use("/api/tipos-documento", tipoDocumentoRoutes);
+app.use("/api/notificaciones", notificacionRoutes);
 app.use("/api/estados-vehiculo", estadoVehiculoRoutes);
 app.use("/api/estados-conductor", estadoConductorRoutes);
 app.use("/api/estados-viaje", estadoViajeRoutes);

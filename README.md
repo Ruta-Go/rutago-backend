@@ -237,6 +237,10 @@ npx sequelize-cli db:migrate:undo
 npx sequelize-cli db:migrate:undo --name 20260704000001-create-estados-vehiculo.js
 ```
 
+> `20261118000001-create-notificaciones.js` es **aditiva**: crea `Notificaciones` sólo si no existe,
+> no altera tablas con datos y su `down` está deliberadamente inactivo para no borrar historial.
+> No se ejecutó contra producción durante este desarrollo.
+
 ### Migración de datos históricos (opcional)
 
 Si existe una base MySQL previa, el script `scripts/migrate-mysql-to-pg.js` copia los datos históricos a PostgreSQL de forma idempotente (no duplica registros).
@@ -357,6 +361,17 @@ Endpoints destacados adicionales:
 | POST   | /api/viajes/:id/unirse | Pasajero   | Unirse a un viaje como pasajero   |
 | GET    | /api/viajes/me/mis-viajes | Auth     | Obtener viajes del usuario actual |
 
+### Notificaciones internas
+
+| Método | Ruta                          | Roles  | Descripción                                  |
+| ------ | ----------------------------- | ------ | -------------------------------------------- |
+| GET    | /api/notificaciones           | Auth   | Notificaciones propias (`?soloNoLeidas=true`) |
+| GET    | /api/notificaciones/no-leidas | Auth   | Cantidad de no leídas                        |
+| PATCH  | /api/notificaciones/:id/leida | Auth   | Marcar como leída (sólo la propia)           |
+| POST   | /api/notificaciones           | Admin  | Crear una notificación real para un usuario  |
+
+Se generan automáticamente, a partir de hechos reales del sistema: al aceptarse/iniciarse/finalizarse/cancelarse un viaje se avisa a los participantes (excluyendo a quien ejecuta la acción), y al unirse un pasajero se avisa al conductor. Cada alta se persiste y además se difunde por WebSocket como `notificacion`. No hay correos ni push del sistema operativo: eso seguiría dependiendo de credenciales externas.
+
 ### Tiempo real y geoespacial
 
 El seguimiento no duplica el REST de GPS ya existente (`GET/PUT /api/vehiculos/:id/ubicacion`).
@@ -371,7 +386,7 @@ Sólo agrega difusión en tiempo real y búsqueda por proximidad sobre `Rutas.ru
 - **Mensajes del cliente:** `{ "tipo": "suscribirse", "sala": "viaje:12" }` y
   `{ "tipo": "desuscribirse", "sala": "viaje:12" }`.
 - **Eventos del servidor:** `conectado`, `suscrito`, `desuscrito`, `error`,
-  `ubicacion` y —desde la siguiente tarea— `notificacion`.
+  `ubicacion`, `notificacion` y `notificacion_leida`.
 - **GPS real:** cada `PUT /api/vehiculos/:id/ubicacion` persiste latitud, longitud,
   velocidad y fecha, y publica el evento `ubicacion` a la sala del vehículo y del viaje activo.
   Si no hay viaje activo, no se inventa receptor: el evento queda sólo en la sala del vehículo.
@@ -459,16 +474,16 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 - WebSocket autenticado en `/ws` con salas autorizadas por propiedad real en BD.
 - Difusión en tiempo real de la ubicación reportada por conductores (`evento ubicacion`).
 - Búsqueda de rutas cercanas con PostGIS cuando está disponible y fallback real en JavaScript.
+- Notificaciones internas persistentes con eventos reales de viajes y difusión por WebSocket.
 
 ### 🚧 En desarrollo
 
-- Notificaciones automáticas persistentes (siguiente tarea del backend).
 - Geometrías espaciales de comunas/barrios y puntos de vehículos en PostGIS (requiere decisión de infraestructura; no se ejecuta contra producción).
 
 ### 📌 Pendiente
 
 - Estado de buses en tiempo real en el mapa web (requiere consumir el nuevo canal WebSocket).
-- Notificaciones automáticas (no confundir con el canal WebSocket ya disponible).
+- Push del sistema operativo / correo de notificaciones: requiere proveedor y credenciales externas; no se simula.
 - Habilitar PostGIS en la BD de destino si se quiere el motor `postgis`; sin él funciona el motor `javascript`.
 
 ---
@@ -494,8 +509,8 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 
 ## 🧪 Evidencia de cierre (Sprint 4)
 
-- [x] `npm test` → 27 pruebas, 27 correctas (incluye WebSocket, GPS y geobúsqueda).
-- [x] Commit local de tiempo real y geoespacial sin push (restricción vigente).
+- [x] `npm test` → 35 pruebas, 35 correctas (incluye WebSocket, GPS, geobúsqueda y notificaciones).
+- [x] Commits locales de tiempo real/geoespacial y notificaciones sin push (restricción vigente).
 - [x] `git push origin main` desde `rutago-backend` (commits `9c6f292`, `e9dd736`, docs finales).
 - [x] `GET https://rutago-backend-a303.onrender.com/api/ping` → 200.
 - [ ] Verificación manual en vivo de los 4 checks de Fase 2: bloqueada porque el dominio del frontend está vencido.
