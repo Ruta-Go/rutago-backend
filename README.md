@@ -482,7 +482,6 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 
 ### 📌 Pendiente
 
-- Estado de buses en tiempo real en el mapa web (requiere consumir el nuevo canal WebSocket).
 - Push del sistema operativo / correo de notificaciones: requiere proveedor y credenciales externas; no se simula.
 - Habilitar PostGIS en la BD de destino si se quiere el motor `postgis`; sin él funciona el motor `javascript`.
 
