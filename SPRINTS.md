@@ -20,6 +20,7 @@ Cierre integral de RutaGo **sin reconstruir** el proyecto: se auditaron los tres
 | Sprint 7 / T1 · Tiempo real y geoespacial | `rutago-backend` | WebSocket autenticado con salas autorizadas, GPS en tiempo real sobre REST existente, `POST /rutas/cercanas` con PostGIS/fallback JS | `46c5f1a` | No (restricción vigente) |
 | Sprint 7 / T2 · Notificaciones internas | `rutago-backend` | Tabla aditiva, endpoints propios, eventos reales de viaje y difusión WebSocket | `b6e9512` | No (restricción vigente) |
 | Sprint 7 / T3 · Móvil funcional | `rutago-mobile` | Mis viajes, Mis solicitudes, Mi perfil y Notificaciones conectados a API real + WebSocket; dashboard sin placeholders en esas opciones | `908eec5` | No (restricción vigente) |
+| Sprint 7 / T4 · Mapa web en vivo | `rutago-frontend` | Posición inicial por REST y actualización por WebSocket en `/viajes/:id/mapa` | `d63db00` | No (restricción vigente) |
 
 ## Verificación ejecutada
 
