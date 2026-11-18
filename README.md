@@ -103,6 +103,7 @@ rutago-backend/
 ```bash
 npm start          # Iniciar servidor (producción)
 npm run dev        # Iniciar con nodemon (desarrollo)
+npm test           # Pruebas unitarias con Jest (18/18)
 ```
 
 ---
@@ -134,11 +135,14 @@ El frontend se sirve desde el mismo dominio VPS. Las peticiones a `/api` son red
 
 ## 🔗 URLs activas
 
-| Servicio | URL                                         |
-| -------- | ------------------------------------------- |
-| Frontend | https://rutago.seminario1.eleueleo.com/     |
-| Backend  | https://rutago.seminario1.eleueleo.com/api  |
-| Swagger  | http://localhost:8082/api/docs (solo local) |
+| Servicio            | URL                                                  | Verificación                 |
+| ------------------- | ---------------------------------------------------- | ---------------------------- |
+| Frontend (VPS)      | https://rutago.seminario1.eleueleo.com/              | Despliegue por GitHub Actions |
+| Backend (Render)    | https://rutago-backend-a303.onrender.com/api         | `GET /api/ping` → 200          |
+| Backend (VPS, proxy)| https://rutago.seminario1.eleueleo.com/api           | TLS no validado desde este entorno |
+| Swagger             | http://localhost:8082/api/docs (solo local)          | —                            |
+
+La URL definitiva de producción debe acordarse entre Render y el VPS/dominio. El móvil usa `EXPO_PUBLIC_API_URL` para apuntar al backend elegido.
 
 ---
 
@@ -190,9 +194,16 @@ USER_DB=postgres
 DB_PASSWORD=tu_contrasena_segura
 DB_NAME=rutago_db
 CORS_ORIGIN=http://localhost:5173
+FRONTEND_URL=http://localhost:5173
 JWT_SECRET=tu_clave_super_secreta
 JWT_EXPIRES_IN=8h
 JWT_REFRESH_EXPIRES_IN=7d
+
+# Recuperación de contraseña (producción requiere proveedor)
+EMAIL_API_KEY=tu_api_key_de_resend
+EMAIL_FROM=RutaGo <no-responder@tu-dominio.com>
+PASSWORD_RESET_URL=http://localhost:5173/recuperar-password
+# Para deep link móvil: rutagomobile://recuperar-password
 ```
 
 Opcional — solo si se migrarán datos históricos desde una base MySQL previa:
@@ -247,11 +258,16 @@ npm start
 
 ### Autenticación
 
-| Método | Ruta                               | Descripción          |
-| ------ | ---------------------------------- | -------------------- |
-| POST   | /api/usuarios/login                | Iniciar sesión       |
-| POST   | /api/usuarios/registro             | Registrar usuario    |
-| POST   | /api/usuarios/recuperar-contrasena | Recuperar contraseña |
+| Método | Ruta                               | Descripción                                   |
+| ------ | ---------------------------------- | --------------------------------------------- |
+| POST   | /api/auth/login                    | Iniciar sesión                                |
+| POST   | /api/auth/refresh                  | Renovar access token con refresh token        |
+| GET    | /api/auth/verificar-token          | Verificar validez del access token            |
+| POST   | /api/usuarios/registro             | Registrar usuario (siempre rol `PASAJERO`)    |
+| POST   | /api/usuarios/recuperar-contrasena | Solicitar enlace de recuperación              |
+| POST   | /api/usuarios/cambiar-contrasena   | Restablecer contraseña con token de un solo uso |
+
+Todas las respuestas usan el sobre `{ "success": boolean, "data"?: ..., "message"?: string }`. El token de recuperación se guarda hasheado (SHA-256) y el enlace se construye con `PASSWORD_RESET_URL` o `FRONTEND_URL`.
 
 ### Usuarios
 
@@ -262,9 +278,9 @@ npm start
 | POST   | /api/usuarios                 | Admin | Crear usuario                             |
 | PUT    | /api/usuarios/:id             | Admin | Actualizar usuario                        |
 | DELETE | /api/usuarios/:id             | Admin | Eliminar usuario                          |
-| GET    | /api/usuarios/verificar-token | Auth  | Verificar validez del token               |
 | GET    | /api/usuarios/me/perfil       | Auth  | Obtener perfil del usuario autenticado    |
 | PUT    | /api/usuarios/me/perfil       | Auth  | Actualizar perfil del usuario autenticado |
+| PUT    | /api/usuarios/me/contrasena   | Auth  | Cambiar contraseña autenticado            |
 | PUT    | /api/usuarios/:id/rol         | Admin | Cambiar rol de un usuario                 |
 
 ### Vehículos
@@ -395,6 +411,10 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 ### ✅ Completado
 
 - Sistema de autenticación con JWT (login, registro, verificación de token, refresh).
+- Seguridad reforzada: rol asignado por servidor en registro, contraseñas 8+letra+número,
+  tokens de recuperación hasheados, refresh rechazado como access, rate limit en `/auth/refresh`,
+  CORS con trim y HSTS en producción.
+- Verificación de propiedad en conductores, vehículos, viajes y pasajeros (middleware `ownership`).
 - Roles: Administrador, Conductor, Pasajero, Entidad Externa.
 - Validación de entrada con Zod (schemas + middleware).
 - Catálogos dinámicos desde BD: estados de vehículo, conductor, viaje y tipos de documento.
@@ -442,10 +462,22 @@ El pipeline ejecuta migraciones (estructura + catálogos) automáticamente antes
 
 ---
 
+## 🧪 Evidencia de cierre (Sprint 4)
+
+- [x] `npm test` → 18 pruebas, 18 correctas.
+- [x] `git push origin main` desde `rutago-backend` (commits `9c6f292`, `e9dd736`, docs finales).
+- [x] `GET https://rutago-backend-a303.onrender.com/api/ping` → 200.
+- [ ] Verificación manual en vivo de los 4 checks de Fase 2 (requiere credenciales y entorno desplegado).
+
+> Seguridad operativa: el `.env` real revisado contiene credenciales que deben considerarse
+> expuestas. Rotarlas de forma coordinada sin publicar valores.
+
+---
+
 <a id="enlaces"></a>
 
 ## 🔗 Enlaces
 
-[Frontend](https://github.com/seminario-actualizacion-1/rutago-frontend)
+[SPRINTS.md](SPRINTS.md) · [Frontend](https://github.com/Ruta-Go/rutago-frontend) · [Móvil](https://github.com/Ruta-Go/rutago-mobile) · [Trello](https://trello.com/b/zR4MFcBH)
 
 
