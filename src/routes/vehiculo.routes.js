@@ -3,6 +3,7 @@ const router = express.Router();
 const vehiculoController = require("../controllers/vehiculo.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const roleMiddleware = require("../middlewares/role.middleware");
+const ownership = require("../middlewares/ownership.middleware");
 const { validarSchema } = require("../middlewares/validator.middleware");
 const vehiculoSchema = require("../schemas/vehiculo.schema");
 
@@ -55,6 +56,7 @@ const vehiculoSchema = require("../schemas/vehiculo.schema");
 router.get(
   "/",
   authMiddleware.verificarToken,
+  roleMiddleware.esAdminOEntidadOConductor,
   validarSchema(require("../schemas/paginacion.schema").paginacion, "query"),
   vehiculoController.obtenerTodos,
 );
@@ -85,6 +87,7 @@ router.get(
 router.get(
   "/:id",
   authMiddleware.verificarToken,
+  roleMiddleware.esAdminOEntidadOConductor,
   vehiculoController.obtenerPorId,
 );
 
@@ -167,6 +170,7 @@ router.put(
   "/:id/ubicacion",
   authMiddleware.verificarToken,
   roleMiddleware.esConductor,
+  ownership.vehiculoAsignadoAConductor,
   validarSchema(vehiculoSchema.actualizarUbicacion),
   vehiculoController.actualizarUbicacion,
 );
@@ -222,6 +226,7 @@ router.post(
   "/",
   authMiddleware.verificarToken,
   roleMiddleware.esAdminOEntidad,
+  ownership.vehiculoEntidadCreacion,
   validarSchema(vehiculoSchema.crear),
   vehiculoController.crearVehiculo,
 );
@@ -278,6 +283,7 @@ router.put(
   "/:id",
   authMiddleware.verificarToken,
   roleMiddleware.esAdminOEntidad,
+  ownership.vehiculoDeMiEntidad,
   validarSchema(vehiculoSchema.actualizar),
   vehiculoController.actualizarVehiculo,
 );
@@ -311,6 +317,7 @@ router.delete(
   "/:id",
   authMiddleware.verificarToken,
   roleMiddleware.esAdminOEntidad,
+  ownership.vehiculoDeMiEntidad,
   vehiculoController.eliminarVehiculo,
 );
 

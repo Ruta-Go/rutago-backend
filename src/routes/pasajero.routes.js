@@ -3,6 +3,7 @@ const router = express.Router();
 const pasajeroController = require("../controllers/pasajero.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const roleMiddleware = require("../middlewares/role.middleware");
+const ownership = require("../middlewares/ownership.middleware");
 const { validarSchema } = require("../middlewares/validator.middleware");
 const pasajeroSchema = require("../schemas/pasajero.schema");
 
@@ -145,6 +146,7 @@ router.put(
 router.get(
   "/usuario/:usuarioId",
   authMiddleware.verificarToken,
+  ownership.pasajeroPropio,
   pasajeroController.obtenerPorUsuarioId,
 );
 

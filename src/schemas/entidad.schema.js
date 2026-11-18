@@ -47,7 +47,9 @@ const crearConUsuario = z
       .transform((v) => v.toLowerCase()),
     contrasena: z
       .string({ required_error: "La contraseña es obligatoria" })
-      .min(6, "La contraseña debe tener al menos 6 caracteres"),
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
+      .regex(/[A-Za-z]/, "Debe contener al menos una letra")
+      .regex(/[0-9]/, "Debe contener al menos un número"),
     razonSocial: z
       .string({ required_error: "La razón social es obligatoria" })
       .trim()

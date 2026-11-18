@@ -69,6 +69,36 @@ exports.esAdminOEntidad = (req, res, next) => {
   }
 };
 
+exports.esPasajeroOAdmin = (req, res, next) => {
+  if (
+    req.usuario &&
+    (req.usuario.rolId === ROLES.ADMIN || req.usuario.rolId === ROLES.PASAJERO)
+  ) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: "Requiere permisos de pasajero o administrador.",
+    });
+  }
+};
+
+exports.esAdminOEntidadOConductor = (req, res, next) => {
+  if (
+    req.usuario &&
+    (req.usuario.rolId === ROLES.ADMIN ||
+      req.usuario.rolId === ROLES.ENTIDAD ||
+      req.usuario.rolId === ROLES.CONDUCTOR)
+  ) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: "Requiere permisos de administrador, entidad o conductor.",
+    });
+  }
+};
+
 exports.esPasajeroOConductorOAdmin = (req, res, next) => {
   if (
     req.usuario &&

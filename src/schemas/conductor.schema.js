@@ -18,6 +18,12 @@ const actualizar = z.object({
   estadoId: z.coerce.number().int().positive().optional(),
 });
 
+// El conductor sólo edita su licencia desde /me/perfil. El estado se cambia
+// por /:id/estado, que valida reglas de negocio (viajes activos).
+const actualizarPerfilConductor = z.object({
+  licenciaConducir: z.string().trim().max(50).optional(),
+});
+
 const crearConUsuario = z
   .object({
     nombres: z
@@ -37,7 +43,9 @@ const crearConUsuario = z
       .transform((v) => v.toLowerCase()),
     contrasena: z
       .string({ required_error: "La contraseña es obligatoria" })
-      .min(6, "La contraseña debe tener al menos 6 caracteres"),
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
+      .regex(/[A-Za-z]/, "Debe contener al menos una letra")
+      .regex(/[0-9]/, "Debe contener al menos un número"),
     licenciaConducir: z.string().trim().max(50).optional(),
     estadoId: z.coerce.number().int().positive().optional(),
   })
@@ -53,4 +61,10 @@ const cambiarEstado = z.object({
     .positive("El estado debe ser un número entero positivo"),
 });
 
-module.exports = { crear, actualizar, crearConUsuario, cambiarEstado };
+module.exports = {
+  crear,
+  actualizar,
+  actualizarPerfilConductor,
+  crearConUsuario,
+  cambiarEstado,
+};

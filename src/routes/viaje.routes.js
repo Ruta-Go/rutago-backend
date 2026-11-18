@@ -3,6 +3,7 @@ const router = express.Router();
 const viajeController = require("../controllers/viaje.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const roleMiddleware = require("../middlewares/role.middleware");
+const ownership = require("../middlewares/ownership.middleware");
 const { validarSchema } = require("../middlewares/validator.middleware");
 const viajeSchema = require("../schemas/viaje.schema");
 
@@ -91,6 +92,7 @@ router.get(
 router.post(
   "/",
   authMiddleware.verificarToken,
+  roleMiddleware.esPasajeroOAdmin,
   validarSchema(viajeSchema.crear),
   viajeController.crearViaje,
 );
@@ -330,6 +332,7 @@ router.patch(
   "/:id/iniciar",
   authMiddleware.verificarToken,
   roleMiddleware.esConductorOAdmin,
+  ownership.viajeDelConductor,
   viajeController.iniciarViaje,
 );
 
@@ -362,6 +365,7 @@ router.patch(
   "/:id/finalizar",
   authMiddleware.verificarToken,
   roleMiddleware.esConductorOAdmin,
+  ownership.viajeDelConductor,
   viajeController.finalizarViaje,
 );
 
@@ -394,6 +398,7 @@ router.patch(
   "/:id/cancelar",
   authMiddleware.verificarToken,
   roleMiddleware.esPasajeroOConductorOAdmin,
+  ownership.viajeCancelable,
   viajeController.cancelarViaje,
 );
 

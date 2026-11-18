@@ -3,6 +3,7 @@ const router = express.Router();
 const conductorController = require("../controllers/conductor.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const roleMiddleware = require("../middlewares/role.middleware");
+const ownership = require("../middlewares/ownership.middleware");
 const { validarSchema } = require("../middlewares/validator.middleware");
 const conductorSchema = require("../schemas/conductor.schema");
 
@@ -52,6 +53,7 @@ const conductorSchema = require("../schemas/conductor.schema");
 router.get(
   "/",
   authMiddleware.verificarToken,
+  roleMiddleware.esAdminOEntidad,
   validarSchema(require("../schemas/paginacion.schema").paginacion, "query"),
   conductorController.obtenerTodos,
 );
@@ -114,7 +116,7 @@ router.put(
   "/me/perfil",
   authMiddleware.verificarToken,
   roleMiddleware.esConductor,
-  validarSchema(conductorSchema.actualizar),
+  validarSchema(conductorSchema.actualizarPerfilConductor),
   conductorController.actualizarMiPerfil,
 );
 
@@ -146,6 +148,7 @@ router.put(
 router.get(
   "/:id",
   authMiddleware.verificarToken,
+  ownership.conductorVisible,
   conductorController.obtenerPorId,
 );
 
@@ -278,6 +281,7 @@ router.patch(
   "/:id/estado",
   authMiddleware.verificarToken,
   roleMiddleware.esConductor,
+  ownership.conductorPropio,
   validarSchema(conductorSchema.cambiarEstado),
   conductorController.cambiarEstado,
 );
