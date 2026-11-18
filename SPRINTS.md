@@ -14,7 +14,8 @@ Cierre integral de RutaGo **sin reconstruir** el proyecto: se auditaron los tres
 | Sprint 1 / T3 · Propiedad y permisos | `rutago-backend` | Middleware `ownership` para conductores, vehículos, viajes y pasajeros; 6 pruebas nuevas | `e9dd736` | Sí (`0e0a7a9..e9dd736`) |
 | Sprint 2 · Frontend | `rutago-frontend` | Recuperación/reset, cambio de contraseña, logout completo, guard reforzado, lint sin errores | `8d511f7` | Sí (`acfbd5c..8d511f7`) |
 | Sprint 3 · Móvil | `rutago-mobile` | `EXPO_PUBLIC_API_URL`, envelope `{ success, data }`, sesión reactiva, roles reales, logout, deep link y contrato de `horarios` | `75c20e9` | Sí (`5fc2e97..75c20e9`) |
-| Sprint 4 · Documentación y verificación | Los tres | READMEs, `SPRINTS.md`, `.env.example` y evidencia de pruebas | Docs finales | Ver comandos al final |
+| Sprint 4 · Documentación y verificación | Los tres | READMEs, `SPRINTS.md`, `.env.example` y evidencia de pruebas | Docs finales | Sí |
+| Sprint 5 · Auditoría final | Los tres | Sólo `.env.example` versionado, deploy sin generar `JWT_SECRET`, `npm ci` en CI web, CI móvil de tipos/lint | Auditoría final | Sí |
 
 ## Verificación ejecutada
 
@@ -27,6 +28,8 @@ Cierre integral de RutaGo **sin reconstruir** el proyecto: se auditaron los tres
 | `rutago-mobile` | `npx expo lint` | Sin errores |
 | `rutago-mobile` | `npx expo export --platform web --output-dir <ruta-temporal>` | 7 rutas estáticas exportadas |
 | Backend en vivo | `GET https://rutago-backend-a303.onrender.com/api/ping` | 200 |
+| Los tres | `git ls-files` filtrado por `.env` | Sólo `.env.example` está versionado |
+| Los tres | `git grep` de patrones de credenciales | Sin coincidencias reales |
 
 No se generaron artefactos (`dist`, `web-build`) dentro de los repositorios.
 
@@ -38,7 +41,8 @@ No se generaron artefactos (`dist`, `web-build`) dentro de los repositorios.
 4. **Deep link móvil:** `rutagomobile://recuperar-password?token=...`, configurable con `PASSWORD_RESET_URL` en el backend.
 5. **Horarios reales:** `GET /api/rutas/destino/:destino` devuelve `horarios: string[]`. El móvil muestra horas reales y **no inventa** placa, empresa ni estado de vehículo porque el DTO no los incluye.
 6. **Sin secretos:** `.env` nunca se publicó ni se incluyó en commits. Las variables públicas son sólo `VITE_API_URL` y `EXPO_PUBLIC_API_URL`.
-7. **Diferidos:** GPS/WebSocket/PostGIS, notificaciones push, CI/CD con EAS y pantallas móviles de gestión avanzada (se indica que están en la web, sin simular éxito).
+7. **CI/CD:** deploy web con `npm ci`; el script de producción ya **no genera** `JWT_SECRET` automáticamente (falla con mensaje si falta). El móvil tiene CI de `tsc`/lint; EAS build/submit sigue pendiente de credenciales.
+8. **Diferidos:** GPS/WebSocket/PostGIS, notificaciones push, CI/CD con EAS y pantallas móviles de gestión avanzada (se indica que están en la web, sin simular éxito).
 
 ## Restricciones respetadas
 

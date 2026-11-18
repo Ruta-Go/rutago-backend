@@ -15,10 +15,10 @@ else
   echo "  ✓ CORS_ORIGIN ya existe en .env"
 fi
 if ! grep -q "JWT_SECRET" .env 2>/dev/null; then
-  echo "JWT_SECRET=$(openssl rand -base64 32)" >> .env
-  echo "  ✓ JWT_SECRET generado y agregado al .env"
+  echo "❌ Falta JWT_SECRET en .env. Genera y rota la clave manualmente antes de desplegar."
+  exit 1
 else
-  echo "  ✓ JWT_SECRET ya existe en .env"
+  echo "  ✓ JWT_SECRET ya existe en .env (no se modifica)"
 fi
 if ! grep -q "MYSQL_DB" .env 2>/dev/null; then
   echo "⚠️  Faltan las variables MYSQL_* en .env. El script de migración MySQL→PG no podrá conectarse."
