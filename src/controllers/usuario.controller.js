@@ -95,6 +95,25 @@ exports.recuperarContrasena = async (req, res) => {
   }
 };
 
+exports.verificarTokenRecuperacion = async (req, res) => {
+  try {
+    const resultado = await usuarioService.verificarTokenRecuperacion(
+      req.body.token,
+    );
+    res.json({
+      success: true,
+      valido: true,
+      expira: resultado.expira,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      valido: false,
+      message: "El enlace no es válido o ya expiró.",
+    });
+  }
+};
+
 exports.cambiarContrasena = async (req, res) => {
   try {
     const { token, nuevaContrasena } = req.body;

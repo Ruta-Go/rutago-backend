@@ -150,6 +150,25 @@ exports.solicitarRecuperacion = async (correo) => {
   return await correoService.enviarRecuperacion(usuario.correo, token);
 };
 
+/** Valida un enlace sin consumirlo, para avisar antes de pedir la contraseña. */
+exports.verificarTokenRecuperacion = async (token) => {
+  if (typeof token !== "string" || !token.trim()) {
+    throw new Error("TOKEN_INVALIDO_O_EXPIRADO");
+  }
+
+  const usuario = await usuarioRepository.buscarPorToken(
+    hashTokenRecuperacion(token.trim()),
+  );
+  const expira = usuario?.resetPasswordExpires
+    ? new Date(usuario.resetPasswordExpires)
+    : null;
+  if (!usuario || !expira || Number.isNaN(expira.getTime()) || expira < new Date()) {
+    throw new Error("TOKEN_INVALIDO_O_EXPIRADO");
+  }
+
+  return { valido: true, expira };
+};
+
 exports.cambiarContrasena = async (token, nuevaContrasena) => {
   const usuario = await usuarioRepository.buscarPorToken(
     hashTokenRecuperacion(token),

@@ -3,7 +3,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const bcrypt = require("bcryptjs");
 
-const estado = { guardado: null, actualizado: null, tokenGuardado: null, usuario: null };
+const estado = {
+  guardado: null,
+  actualizado: null,
+  tokenGuardado: null,
+  tokenUsuario: null,
+  usuario: null,
+};
 
 const simularModulo = (ruta, exports) => {
   const resolved = require.resolve(ruta);
@@ -31,7 +37,7 @@ simularModulo("../src/repositories/usuario.repository", {
   actualizarTokenRecuperacion: async (id, token, expira) => {
     estado.tokenGuardado = { id, token, expira };
   },
-  buscarPorToken: async () => null,
+  buscarPorToken: async () => estado.tokenUsuario,
   actualizarContrasena: async () => true,
 });
 
@@ -84,6 +90,37 @@ test("el token de recuperación se guarda hasheado", async () => {
   assert.notEqual(estado.tokenGuardado.token.length, 40);
   assert.equal(estado.tokenGuardado.token.length, 64);
   assert.match(estado.tokenGuardado.token, /^[a-f0-9]{64}$/);
+});
+
+test("verificar token de recuperación acepta un enlace vigente sin consumirlo", async () => {
+  estado.tokenUsuario = {
+    id: 10,
+    resetPasswordExpires: new Date(Date.now() + 60000),
+  };
+  const tokenGuardadoAntes = estado.tokenGuardado;
+  const resultado = await service.verificarTokenRecuperacion("token-vigente");
+
+  assert.equal(resultado.valido, true);
+  assert.equal(estado.tokenGuardado, tokenGuardadoAntes);
+});
+
+test("verificar token de recuperación rechaza un enlace vencido", async () => {
+  estado.tokenUsuario = {
+    id: 10,
+    resetPasswordExpires: new Date(Date.now() - 1000),
+  };
+
+  await assert.rejects(
+    () => service.verificarTokenRecuperacion("token-vencido"),
+    /TOKEN_INVALIDO_O_EXPIRADO/,
+  );
+});
+
+test("verificar token de recuperación rechaza un token vacío", async () => {
+  await assert.rejects(
+    () => service.verificarTokenRecuperacion("   "),
+    /TOKEN_INVALIDO_O_EXPIRADO/,
+  );
 });
 
 test("cambiar contraseña rechaza la contraseña actual incorrecta", async () => {

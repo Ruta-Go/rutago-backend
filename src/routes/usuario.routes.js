@@ -78,6 +78,13 @@ router.post(
   usuarioController.recuperarContrasena,
 );
 
+/** Valida un enlace de recuperación sin consumirlo. */
+router.post(
+  "/verificar-token-recuperacion",
+  validarSchema(usuarioSchema.verificarTokenRecuperacion),
+  usuarioController.verificarTokenRecuperacion,
+);
+
 /**
  * @swagger
  * /api/usuarios/cambiar-contrasena:

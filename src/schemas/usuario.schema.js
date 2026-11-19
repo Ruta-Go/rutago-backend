@@ -64,6 +64,13 @@ const recuperarContrasena = z.object({
     .transform((v) => v.toLowerCase()),
 });
 
+const verificarTokenRecuperacion = z.object({
+  token: z
+    .string({ required_error: "El token es obligatorio" })
+    .trim()
+    .min(1, "El token es obligatorio"),
+});
+
 const cambiarContrasena = z.object({
   token: z
     .string({ required_error: "El token es obligatorio" })
@@ -86,4 +93,5 @@ module.exports = {
   recuperarContrasena,
   cambiarContrasena,
   cambiarRol,
+  verificarTokenRecuperacion,
 };
