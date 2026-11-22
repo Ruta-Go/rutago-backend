@@ -63,6 +63,14 @@ Códigos posibles cuando falla:
 - `GET https://rutago-backend-a303.onrender.com/api/health/db` devuelve `404`, así que Render todavía no está sirviendo el código del PR #36. `/api/ping` sí responde `200`, pero corresponde a la versión anterior.
 - En consecuencia, el `500` del login en Render sigue sin poder diagnosticarse con el endpoint nuevo hasta que el equipo corrija el despliegue o confirme el repositorio/rama conectados al servicio de Render.
 
+## Actualización: Render sí desplegó el código nuevo
+
+- Poco después, `GET https://rutago-backend-a303.onrender.com/api/health/db` pasó a responder `200`:
+  `{"success":true,"conectada":true,"tablas":{"Usuarios":true,"Rutas":true},"usuarios":1,"codigo":null}`.
+- El workflow fallido `45060658869`/`45056075852` pertenece al despliegue por SSH a un VPS; Render tiene su propio auto-deploy desde GitHub y ese sí incorporó el PR #36.
+- `POST /api/auth/login` con un correo inexistente ahora devuelve `401 {"success":false,"message":"Correo o contraseña incorrectos."}` en lugar del `500` anterior. El error interno del login quedó resuelto por el despliegue del código diagnóstico/corregido.
+- La base de producción informa **1 solo usuario** y las tablas requeridas existen. Por eso las credenciales del seed local no pueden funcionar allí: **no se cargaron usuarios de prueba en producción**. Si el equipo necesita una cuenta de demostración, debe autorizar explícitamente su creación o un seed controlado en un entorno de staging.
+
 ## Estado de seed y migraciones
 
 - Existe la migración formal `src/migrations/20260727000000-add-costo-to-ruta.js`, que agrega `costo DECIMAL(10,2)` a `Rutas` de forma aditiva.
