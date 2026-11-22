@@ -7,6 +7,7 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const config = require("./config");
 const errorHandler = require("./middlewares/error.middleware");
 const tiempoReal = require("./services/tiempo-real.service");
+const healthService = require("./services/health.service");
 
 const { sequelize } = require("./models");
 const authRoutes = require("./routes/auth.routes");
@@ -152,6 +153,13 @@ app.use("/api/notificaciones", notificacionRoutes);
 app.use("/api/estados-vehiculo", estadoVehiculoRoutes);
 app.use("/api/estados-conductor", estadoConductorRoutes);
 app.use("/api/estados-viaje", estadoViajeRoutes);
+
+app.get("/api/health/db", async (req, res) => {
+  const estado = await healthService.verificarBase();
+  const ok =
+    estado.conectada && estado.tablas.Usuarios && estado.tablas.Rutas;
+  res.status(ok ? 200 : 503).json({ success: ok, ...estado });
+});
 
 app.get("/api/ping", (req, res) => {
   res.json({
