@@ -44,3 +44,15 @@ La contraseña se leyó de `STAGING_DEMO_PASSWORD` en un archivo local fuera de 
 - La validación de rol en el verificador usa `usuario.rol.id`, que es como el backend serializa el rol. El móvil ya normalizaba `usuario.rolId` y `usuario.rol.id`.
 - GPS y notificaciones quedan verificados a nivel de API. La verificación en dispositivo sigue bloqueada por falta de dispositivo/cuenta Expo, y se documenta por separado.
 - Offline: las 59 pruebas del suite móvil son evidencia anterior a esta ventana; no se re-ejecutaron aquí.
+
+## Reverificación ejecutada hoy 2026-11-22 18:25
+
+| Comando | Resultado |
+| --- | --- |
+| `npm test` (backend) | 44/44 pruebas OK |
+| `node <temp>/rutago-staging/e2e-v2.js` | 23/23 verificaciones OK |
+| `GET /api/health/db` | `200`, `conectada=true`, `usuarios=2` |
+
+Esta ejecución es nueva y corresponde a esta ventana de trabajo; no es evidencia histórica. No se modificaron datos reales ni se tocó Render. Las credenciales demo siguen fuera de los repositorios.
+
+La nota anterior sobre 59 pruebas móviles quedó superada: en esta ventana la app móvil quedó en 14 suites / 65 pruebas OK después de centralizar las fuentes de iconos.
