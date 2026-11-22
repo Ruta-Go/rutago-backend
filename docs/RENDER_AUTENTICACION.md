@@ -1,0 +1,69 @@
+# Diagnóstico de autenticación en Render
+
+## Hallazgo real (22 de noviembre de 2026)
+
+- `GET https://rutago-backend-a303.onrender.com/api/ping` responde `200`.
+- `POST /api/auth/login` responde `500 {"success":false,"message":"Error interno del servidor"}` para **todos** los roles probados: pasajero, conductor, administrador, entidad, correo inexistente y contraseña incorrecta.
+- El mismo código ejecutado contra la base local autentica correctamente a `conductor1@rutago.com` y `pasajero1@rutago.com`; un correo inexistente devuelve `CREDENCIALES_INVALIDAS`.
+- La configuración local usa un host de base de datos local, por lo que **no es la misma base que consulta Render**.
+- No hay token de Render ni credenciales del servicio en el entorno disponible; por eso no es posible leer logs, variables ni ejecutar migraciones allí sin acceso.
+
+## Causa más probable
+
+Como `/api/ping` funciona, el proceso arranca y la validación de variables de entorno pasa. El error `500` en todas las variantes de login indica que falla la consulta a la base antes de comparar contraseñas. Las causas candidatas son:
+
+1. La base PostgreSQL de Render no tiene las tablas `Usuarios`/`Rutas` (migraciones no ejecutadas).
+2. Las variables `HOST`, `PORT_DB`, `USER_DB`, `DB_PASSWORD` o `DB_NAME` apuntan a otra base o son inválidas.
+3. La base está dormida o rechaza conexiones en el momento del login.
+
+La app móvil no está usando una URL antigua: `src/services/api.ts` tiene como fallback exactamente `https://rutago-backend-a303.onrender.com` y agrega `/api`.
+
+## Endpoint de diagnóstico agregado
+
+`GET /api/health/db` es público y de sólo lectura. No devuelve secretos, cadenas de conexión ni datos personales.
+
+Respuesta esperada cuando la base es correcta:
+
+```json
+{
+  "success": true,
+  "conectada": true,
+  "tablas": { "Usuarios": true, "Rutas": true },
+  "usuarios": 10,
+  "codigo": null
+}
+```
+
+Códigos posibles cuando falla:
+
+- `DB_SIN_CONEXION`
+- `TABLA_USUARIOS_AUSENTE`
+- `TABLA_RUTAS_AUSENTE`
+- `CONSULTA_USUARIOS_FALLIDA`
+
+## Procedimiento pendiente (requiere acceso a Render)
+
+1. Confirmar qué repositorio y rama tiene conectados el servicio: `Ruta-Go/rutago-backend`, rama `main`.
+2. Confirmar el commit desplegado y la fecha del último deploy.
+3. Revisar las variables de entorno del servicio sin copiar sus valores.
+4. Verificar el servicio PostgreSQL asociado y que esté activo.
+5. Ejecutar migraciones en Render:
+
+   ```bash
+   npm run migrate
+   ```
+
+6. Repetir `GET /api/health/db` y `POST /api/auth/login` con `conductor1@rutago.com`.
+7. Sólo si es un entorno de staging o pruebas autorizado, ejecutar `npm run seed`. **No cargar usuarios de prueba en producción sin autorización expresa.**
+
+## Estado de seed y migraciones
+
+- Existe la migración formal `src/migrations/20260727000000-add-costo-to-ruta.js`, que agrega `costo DECIMAL(10,2)` a `Rutas` de forma aditiva.
+- Existe `src/migrations/20260726000000-reset-secuencias-catalogos.js` para las secuencias corregidas.
+- `scripts/seed.js` usa `findOrCreate`: repetirlo no duplica registros. No actualiza contraseñas de usuarios ya existentes, así que nunca debe usarse para "arreglar" un login.
+
+## Rutas barrio ↔ Universidad
+
+- La sede de la Universidad del Pacífico está documentada en Wikimedia Commons en el barrio El Triunfo, Kilómetro 13, vía al Aeropuerto.
+- El seed registra las cuatro rutas con origen en la universidad y descripción `Universidad - Barrio ...`.
+- `GET /api/rutas/por-paradas?origen=...&destino=...` usa las paradas reales de `RutaBarrio` y reconoce alias de la Universidad del Pacífico, sin inventar recorridos ni coordenadas.
