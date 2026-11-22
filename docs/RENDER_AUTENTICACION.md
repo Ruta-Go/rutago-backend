@@ -56,6 +56,13 @@ Códigos posibles cuando falla:
 6. Repetir `GET /api/health/db` y `POST /api/auth/login` con `conductor1@rutago.com`.
 7. Sólo si es un entorno de staging o pruebas autorizado, ejecutar `npm run seed`. **No cargar usuarios de prueba en producción sin autorización expresa.**
 
+## Evidencia de despliegue posterior al PR #36
+
+- `origin/main` está en `75cf9d90493888bc83bf62035868fc65839f5a88` e incluye `/api/health/db` y `/api/rutas/por-paradas`.
+- El workflow de deploy `45056075852` terminó en `failure`; el paso fallido fue **Verificar conexión SSH**, por lo que **Ejecutar despliegue** ni siquiera corrió. El workflow usa `secrets.PASSWORD_SSH`, `secrets.HOST`, `secrets.USER_NAME_RUTA_GO` y `secrets.SSH_PORT`; sin acceso a esos secretos no es posible distinguir entre clave vencida, host inalcanzable o puerto cambiado.
+- `GET https://rutago-backend-a303.onrender.com/api/health/db` devuelve `404`, así que Render todavía no está sirviendo el código del PR #36. `/api/ping` sí responde `200`, pero corresponde a la versión anterior.
+- En consecuencia, el `500` del login en Render sigue sin poder diagnosticarse con el endpoint nuevo hasta que el equipo corrija el despliegue o confirme el repositorio/rama conectados al servicio de Render.
+
 ## Estado de seed y migraciones
 
 - Existe la migración formal `src/migrations/20260727000000-add-costo-to-ruta.js`, que agrega `costo DECIMAL(10,2)` a `Rutas` de forma aditiva.
