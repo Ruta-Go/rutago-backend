@@ -105,6 +105,24 @@ exports.buscarPorDestino = async (req, res) => {
   }
 };
 
+exports.buscarPorParadas = async (req, res) => {
+  try {
+    const rutas = await rutaService.buscarPorParadas(
+      req.query.origen,
+      req.query.destino,
+    );
+    res.json({ success: true, data: rutas });
+  } catch (error) {
+    if (
+      error.message === "ORIGEN_Y_DESTINO_SON_OBLIGATORIOS" ||
+      error.message === "ORIGEN_Y_DESTINO_NO_PUEDEN_SER_IGUALES"
+    ) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    manejarError(res, error);
+  }
+};
+
 exports.eliminarRuta = async (req, res) => {
   try {
     await rutaService.eliminarRuta(req.params.id);

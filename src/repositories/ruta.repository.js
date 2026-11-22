@@ -54,6 +54,25 @@ exports.obtenerPorId = async (id) => {
   return ruta;
 };
 
+/** Todas las rutas con sus paradas reales, horarios y comunas. */
+exports.obtenerTodasConParadas = async () => {
+  return await Ruta.findAll({
+    include: [
+      { model: Comuna, as: "origen", attributes: ["id", "nombre"] },
+      { model: Comuna, as: "destino", attributes: ["id", "nombre"] },
+      {
+        model: Barrio,
+        as: "barrios",
+        attributes: ["id", "nombre", "comunaId"],
+        through: { attributes: ["orden"] },
+      },
+      { model: Horario, as: "horarios" },
+    ],
+    order: [["id", "ASC"]],
+    distinct: true,
+  });
+};
+
 exports.buscarPorDestino = async (destino) => {
   return await Ruta.findAll({
     include: [

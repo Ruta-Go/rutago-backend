@@ -143,6 +143,37 @@ router.post(
   rutaController.obtenerCercanas,
 );
 
+/**
+ * @swagger
+ * /api/rutas/por-paradas:
+ *   get:
+ *     summary: Rutas que pasan por dos barrios (o la Universidad del Pacífico)
+ *     tags: [Rutas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: origen
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: destino
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Recorridos disponibles en ambos sentidos
+ *       400:
+ *         description: Paradas inválidas
+ */
+router.get(
+  "/por-paradas",
+  authMiddleware.verificarToken,
+  rutaController.buscarPorParadas,
+);
+
 router.get("/:id", authMiddleware.verificarToken, rutaController.obtenerPorId);
 
 /**
