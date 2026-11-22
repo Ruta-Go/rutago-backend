@@ -56,3 +56,7 @@ La contraseña se leyó de `STAGING_DEMO_PASSWORD` en un archivo local fuera de 
 Esta ejecución es nueva y corresponde a esta ventana de trabajo; no es evidencia histórica. No se modificaron datos reales ni se tocó Render. Las credenciales demo siguen fuera de los repositorios.
 
 La nota anterior sobre 59 pruebas móviles quedó superada: en esta ventana la app móvil quedó en 14 suites / 65 pruebas OK después de centralizar las fuentes de iconos.
+
+## Guard antiproducción reverificado 2026-11-22 18:56
+
+Ejecuté `node scripts/seed-staging.js` con `NODE_ENV=production`, `DB_NAME=rutago_db` y una contraseña ficticia de prueba. El script se detuvo antes de conectarse con `SEED_STAGING_RECHAZADO` y `EXIT_CODE=1`. No se usó ninguna credencial real ni se tocó Render o la base de producción.
