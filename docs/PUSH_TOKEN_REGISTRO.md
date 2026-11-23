@@ -16,6 +16,12 @@ Este documento describe la parte backend de la Tarea 18 del plan original. No im
 - `test/pushToken.migration.test.js`: creación guardada, no recreación y rollback no destructivo.
 - `npm test`: 50/50 (44 iniciales + 3 de servicio push + 3 de migración push). La suite de capacidad se integra en un PR independiente.
 
+## Identificación del cambio
+
+- Commit: `49702bb`.
+- Pull Request: `#40`.
+- CI: `Pruebas del backend` = success.
+
 ## Pendiente externo
 
 - La app móvil debe enviar el token obtenido de Expo a este endpoint.
