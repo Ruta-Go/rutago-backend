@@ -21,4 +21,13 @@ const crear = z.object({
   datos: z.record(z.string(), z.unknown()).optional(),
 });
 
-module.exports = { crear };
+const registrarPushToken = z.object({
+  token: z
+    .string()
+    .trim()
+    .min(1, "El token push es obligatorio")
+    .max(255, "El token push no debe exceder 255 caracteres"),
+  plataforma: z.enum(["ios", "android", "web", "desconocida"]).optional(),
+});
+
+module.exports = { crear, registrarPushToken };
