@@ -17,7 +17,8 @@ Registro por tarea del trabajo ejecutado sin tocar producción, Render ni la bas
 - **Trabajo de esta jornada:** se añadió `test/viaje.capacidad.test.js` con tres casos reales sobre `unirseAViaje`: rechazo con cupo agotado, alta con cupo disponible y rechazo cuando el vehículo no declara capacidad.
 - **Archivos:** `test/viaje.capacidad.test.js`, este documento.
 - **Pruebas:** `npm test` → 47/47 (44 anteriores + 3 nuevas).
-- **Commit / PR:** se registrará al publicar este bloque.
+- **Commit / PR:** `1f42acf` · PR `#39`.
+- **CI:** `Pruebas del backend` = success.
 - **Falta:** nada para la evidencia automatizada; la validación visual sigue en móvil.
 
 ## Estado consolidado
