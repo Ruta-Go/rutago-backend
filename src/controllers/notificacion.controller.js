@@ -1,6 +1,7 @@
 "use strict";
 
 const notificacionService = require("../services/notificacion.service");
+const pushTokenService = require("../services/pushToken.service");
 
 exports.listar = async (req, res) => {
   try {
@@ -52,6 +53,21 @@ exports.crear = async (req, res) => {
     });
   } catch (error) {
     console.error("[notificaciones]", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+/** Registro del token Expo del dispositivo del usuario autenticado. */
+exports.registrarPushToken = async (req, res) => {
+  try {
+    const data = await pushTokenService.registrar(req.usuario.id, req.body);
+    res.status(201).json({
+      success: true,
+      message: "Token push registrado",
+      data,
+    });
+  } catch (error) {
+    console.error("[notificaciones] registro de token", error.message);
     res.status(400).json({ success: false, message: error.message });
   }
 };

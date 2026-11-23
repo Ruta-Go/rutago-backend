@@ -47,6 +47,40 @@ router.get(
 
 /**
  * @swagger
+ * /api/notificaciones/push-token:
+ *   post:
+ *     summary: Registrar el token push del dispositivo del usuario autenticado
+ *     tags: [Notificaciones]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token]
+ *             properties:
+ *               token:
+ *                 type: string
+ *               plataforma:
+ *                 type: string
+ *                 enum: [ios, android, web, desconocida]
+ *     responses:
+ *       201:
+ *         description: Token registrado
+ *       400:
+ *         description: Token inválido
+ */
+router.post(
+  "/push-token",
+  authMiddleware.verificarToken,
+  validarSchema(notificacionSchema.registrarPushToken),
+  notificacionController.registrarPushToken,
+);
+
+/**
+ * @swagger
  * /api/notificaciones/{id}/leida:
  *   patch:
  *     summary: Marcar como leída una notificación propia
